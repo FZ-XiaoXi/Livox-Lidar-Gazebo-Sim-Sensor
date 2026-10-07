@@ -48,9 +48,9 @@ livox_lidar_gz_sensor/
 ├── CMakeLists.txt
 ├── package.xml
 ├── include/
-│   └── livox_lidar_plugin.hpp
+│   └── livox_lidar_system.hpp
 ├── src/
-│   └── livox_lidar_plugin.cpp
+│   └── livox_lidar_system.cpp
 ├── scan_mode/
 │   ├── mid70.csv
 │   ├── mid40.csv
@@ -114,7 +114,7 @@ echo "$GZ_SIM_SYSTEM_PLUGIN_PATH"
 ~~~xml
 <plugin
   filename="liblivox_lidar_gz_sensor.so"
-  name="sample_system::SampleSystem" />
+  name="livox_lidar_system::LivoxLidarSystem" />
 ~~~
 
 插件仍然必须写入 SDF world 或 model，Gazebo 才会实例化它。环境 hook 只负责让 Gazebo 找到共享库，不会自动加载插件。
@@ -142,7 +142,7 @@ bash ./run_diff_drive.sh
 插件通过 std::cerr 输出启动确认，因此这条日志不依赖 Gazebo verbosity：
 
 ~~~text
-[livox_lidar_gz_sensor] SampleSystem started on entity <id>
+[livox_lidar_gz_sensor] LivoxLidarSystem started on entity <id>
 ~~~
 
 PostUpdate 中的诊断信息使用 gzmsg。如果需要在终端显示这类消息，可以使用 ROS 2 launch 参数语法：
@@ -165,7 +165,7 @@ gz plugin -i -p install/livox_lidar_gz_sensor/lib/liblivox_lidar_gz_sensor.so
 预期可以看到以下接口：
 
 ~~~text
-sample_system::SampleSystem
+livox_lidar_system::LivoxLidarSystem
 gz::sim::v8::System
 gz::sim::v8::ISystemConfigure
 gz::sim::v8::ISystemPostUpdate

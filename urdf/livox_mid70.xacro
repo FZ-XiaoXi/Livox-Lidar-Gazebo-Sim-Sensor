@@ -1,0 +1,36 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  xmlns:gz="http://gazebosim.org">
+  <xacro:macro name="livox_mid70"
+    params="
+      name
+      model:=mid70
+      scan_file:='$(find livox_lidar_gz_sensor)/scan_mode/mid70.csv'
+      update_rate:=10
+      frame_id:=livox
+      range_min:=0.1
+      range_max:=70.0
+      downsample:=1">
+
+    <sensor
+      name="${name}"
+      type="custom"
+      gz:type="livox_mid70">
+
+      <always_on>true</always_on>
+      <update_rate>${update_rate}</update_rate>
+      <topic>/${name}/points</topic>
+
+      <gz:livox_config>
+        <model>${model}</model>
+        <scan_file>${scan_file}</scan_file>
+        <frame_id>${frame_id}</frame_id>
+        <range_min>${range_min}</range_min>
+        <range_max>${range_max}</range_max>
+        <downsample>${downsample}</downsample>
+      </gz:livox_config>
+
+    </sensor>
+  </xacro:macro>
+</robot>

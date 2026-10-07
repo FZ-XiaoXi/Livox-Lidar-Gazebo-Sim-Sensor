@@ -13,14 +13,21 @@ set(GZ_PLUGIN_VER ${gz-plugin2_VERSION_MAJOR})
 gz_find_package(gz-common5 REQUIRED)
 set(GZ_COMMON_VER ${gz-common5_VERSION_MAJOR})
 
+gz_find_package(gz-sensors8 REQUIRED)
+set(GZ_SENSORS_VER ${gz-sensors8_VERSION_MAJOR})
+
 gz_find_package(gz-sim8 REQUIRED)
 set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 
 # 3. 创建插件库并链接
-add_library(${PROJECT_NAME} SHARED src/livox_lidar_plugin.cpp)
+add_library(${PROJECT_NAME} SHARED
+  src/livox_lidar_system.cpp
+  src/livox_lidar_sensor.cpp
+)
 target_link_libraries(${PROJECT_NAME} PRIVATE
   gz-plugin${GZ_PLUGIN_VER}::gz-plugin${GZ_PLUGIN_VER}
   gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
+  gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER}
   gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
 )
 
@@ -31,6 +38,11 @@ target_include_directories(${PROJECT_NAME}
 )
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
+
+install(
+  DIRECTORY urdf scan_mode
+  DESTINATION share/${PROJECT_NAME}
+)
 
 # Add this package's shared-library directory to Gazebo's system-plugin search
 # path whenever the workspace environment is sourced.

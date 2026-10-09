@@ -44,32 +44,6 @@ def generate_launch_description():
         output='screen',
     )
 
-    lidar_left_world_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=[
-            '--x', '-1', '--y', '0', '--z', '1.2',
-            '--roll', '0', '--pitch', '0', '--yaw', '1.5708',
-            '--frame-id', 'world',
-            '--child-frame-id', 'livox_left_frame',
-        ],
-        name='livox_left_world_tf',
-        output='screen',
-    )
-
-    lidar_right_world_tf = Node(
-        package='tf2_ros',
-        executable='static_transform_publisher',
-        arguments=[
-            '--x', '1', '--y', '0', '--z', '1.2',
-            '--roll', '0', '--pitch', '0', '--yaw', '0',
-            '--frame-id', 'world',
-            '--child-frame-id', 'livox_right_frame',
-        ],
-        name='livox_right_world_tf',
-        output='screen',
-    )
-
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
@@ -84,7 +58,5 @@ def generate_launch_description():
         rviz,
         gz_sim,
         bridge,
-        lidar_left_world_tf,
-        lidar_right_world_tf,
         rviz_node,
     ])

@@ -6,6 +6,8 @@
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid70.xacro"/>
 
   <world name="livox_example">
+    <!-- Keep movable objects suspended while allowing GUI pose commands. -->
+    <gravity>0 0 0</gravity>
     <physics name="1ms" type="dart">
       <max_step_size>0.001</max_step_size>
       <real_time_factor>1.0</real_time_factor>
@@ -27,6 +29,9 @@
     <plugin
       filename="gz-sim-scene-broadcaster-system"
       name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands"/>
 
     <light name="sun" type="directional">
       <pose>0 0 8 0 0 0</pose>
@@ -62,11 +67,19 @@
       </link>
     </model>
 
-    <!-- Four static walls make the Livox scan produce visible returns. -->
+    <!-- Four dynamic walls can be selected and moved with Gazebo's GUI. -->
     <model name="wall_north">
-      <static>true</static>
+      <static>false</static>
       <pose>0 5 2.5 0 0 0</pose>
       <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>21.0</ixx>
+            <iyy>83.3</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
         <collision name="wall_collision">
           <geometry><box><size>10 0.2 5</size></box></geometry>
         </collision>
@@ -78,9 +91,17 @@
     </model>
 
     <model name="wall_south">
-      <static>true</static>
+      <static>false</static>
       <pose>0 -5 2.5 0 0 0</pose>
       <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>21.0</ixx>
+            <iyy>83.3</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
         <collision name="wall_collision">
           <geometry><box><size>10 0.2 5</size></box></geometry>
         </collision>
@@ -92,9 +113,17 @@
     </model>
 
     <model name="wall_east">
-      <static>true</static>
+      <static>false</static>
       <pose>5 0 2.5 0 0 0</pose>
       <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>83.3</ixx>
+            <iyy>21.0</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
         <collision name="wall_collision">
           <geometry><box><size>0.2 10 5</size></box></geometry>
         </collision>
@@ -106,9 +135,17 @@
     </model>
 
     <model name="wall_west">
-      <static>true</static>
+      <static>false</static>
       <pose>-5 0 2.5 0 0 0</pose>
       <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>83.3</ixx>
+            <iyy>21.0</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
         <collision name="wall_collision">
           <geometry><box><size>0.2 10 5</size></box></geometry>
         </collision>
@@ -121,10 +158,18 @@
 
     <!-- Minimal robot: a cone-shaped base_link with a Mid-70 on its top. -->
     <model name="livox_example_robot_1">
-      <static>true</static>
+      <static>false</static>
       <pose>-1 0 0.6 0 0 1.5708</pose>
 
-      <link name="base_link">
+      <link name="base_link_left">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.2</ixx>
+            <iyy>0.2</iyy>
+            <izz>0.2</izz>
+          </inertia>
+        </inertial>
         <visual name="base_visual">
           <geometry>
             <cone>
@@ -147,7 +192,7 @@
           </geometry>
         </collision>
       </link>
-    
+
       <xacro:livox_mid70_link
         link_name="livox_left"
         link_pose="0 0 0.6 0 0 0"
@@ -156,21 +201,29 @@
         noise_stddev="0.01"/>
 
       <joint name="livox_mount_joint" type="fixed">
-        <parent>base_link</parent>
+        <parent>base_link_left</parent>
         <child>livox_left</child>
       </joint>
 
-      <!-- The example's only custom plugin. -->
+      <!-- The example's only custom user plugin. -->
       <plugin
         filename="liblivox_lidar_gz_sensor.so"
         name="livox_lidar_system::LivoxLidarSystem"/>
     </model>
 
     <model name="livox_example_robot_2">
-      <static>true</static>
+      <static>false</static>
       <pose>1 0 0.6 0 0 0</pose>
 
-      <link name="base_link">
+      <link name="base_link_right">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.2</ixx>
+            <iyy>0.2</iyy>
+            <izz>0.2</izz>
+          </inertia>
+        </inertial>
         <visual name="base_visual">
           <geometry>
             <cone>
@@ -202,11 +255,11 @@
         noise_stddev="0.01"/>
 
       <joint name="livox_mount_joint" type="fixed">
-        <parent>base_link</parent>
+        <parent>base_link_right</parent>
         <child>livox_right</child>
       </joint>
 
-      <!-- The example's only custom plugin. -->
+      <!-- The example's only custom user plugin. -->
       <plugin
         filename="liblivox_lidar_gz_sensor.so"
         name="livox_lidar_system::LivoxLidarSystem"/>

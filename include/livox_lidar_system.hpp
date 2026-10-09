@@ -1,8 +1,13 @@
 #ifndef __LIVOX_LIDAR_SYSTEM_HPP__
 #define __LIVOX_LIDAR_SYSTEM_HPP__
 
+#include <chrono>
+#include <unordered_map>
+
+#include <gz/msgs/pose_v.pb.h>
 #include <gz/sim/EventManager.hh>
 #include <gz/sim/System.hh>
+#include <gz/transport/Node.hh>
 #include "livox_lidar_sensor.hpp"
 
  
@@ -52,6 +57,21 @@ namespace livox_lidar_system
 
     /// \brief The entity that owns this system.
     private: gz::sim::Entity ownerEntity_;
+
+    /// \brief End of the previously published window for each sensor.
+    private: std::unordered_map<gz::sim::Entity,
+        std::chrono::steady_clock::duration> lastScanTimes_;
+
+    /// \brief Sensors for which a complete scan window was submitted to
+    /// physics during the current update.
+    private: std::unordered_map<gz::sim::Entity,
+        std::chrono::steady_clock::duration> pendingRaycastEntities_;
+
+    /// \brief Publishes world to sensor-frame transforms for ROS consumers.
+    private: gz::transport::Node tfNode_;
+    private: gz::transport::Node::Publisher tfPublisher_;
+    private: std::chrono::steady_clock::duration lastTfPublishTime_{};
+    private: bool tfPublished_{false};
 
     private: bool IsOwnedBy(
       gz::sim::Entity _sensor,

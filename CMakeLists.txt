@@ -19,6 +19,12 @@ set(GZ_SENSORS_VER ${gz-sensors8_VERSION_MAJOR})
 gz_find_package(gz-sim8 REQUIRED)
 set(GZ_SIM_VER ${gz-sim8_VERSION_MAJOR})
 
+gz_find_package(gz-msgs10 REQUIRED)
+set(GZ_MSGS_VER ${gz-msgs10_VERSION_MAJOR})
+
+gz_find_package(gz-transport13 REQUIRED)
+set(GZ_TRANSPORT_VER ${gz-transport13_VERSION_MAJOR})
+
 # 3. 创建插件库并链接
 add_library(${PROJECT_NAME} SHARED
   src/livox_lidar_system.cpp
@@ -29,6 +35,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE
   gz-common${GZ_COMMON_VER}::gz-common${GZ_COMMON_VER}
   gz-sensors${GZ_SENSORS_VER}::gz-sensors${GZ_SENSORS_VER}
   gz-sim${GZ_SIM_VER}::gz-sim${GZ_SIM_VER}
+  gz-msgs${GZ_MSGS_VER}::gz-msgs${GZ_MSGS_VER}
+  gz-transport${GZ_TRANSPORT_VER}::gz-transport${GZ_TRANSPORT_VER}
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -40,7 +48,7 @@ target_include_directories(${PROJECT_NAME}
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
 
 install(
-  DIRECTORY urdf scan_mode
+  DIRECTORY urdf scan_mode meshes
   DESTINATION share/${PROJECT_NAME}
 )
 

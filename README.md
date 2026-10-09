@@ -1,8 +1,8 @@
 <div align="center">
 
-<h1>Livox 激光雷达 Gazebo Sim 传感器</h1>
+<h1>Gazebo Sim Livox 激光雷达传感器插件</h1>
 
-<p>面向 ROS 2 Jazzy 和 Gazebo Harmonic 的 Livox 扫描模式支持。</p>
+<p>面向 ROS 2 Jazzy 和 Gazebo Harmonic 的 Livox 激光雷达传感器插件</p>
 
 <p>
   <a href="https://ubuntu.com/desktop"><img src="https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"></a>
@@ -14,20 +14,21 @@
 
 </div>
 
-本项目基于 [Livox laser simulation](https://github.com/Livox-SDK/livox_laser_simulation) 重新开发。原项目面向较旧的 ROS 和 Gazebo Classic 技术栈，当前项目针对以下环境进行了迁移和重构：
+本项目基于 [Livox laser simulation](https://github.com/Livox-SDK/livox_laser_simulation) 重新开发。原项目面向较旧的 ROS 和 Gazebo Classic 版本，当前项目针对以下环境进行了迁移和重构：
 
 - Ubuntu 24.04
 - ROS 2 Jazzy
 - Gazebo Harmonic（Gazebo Sim 8）
-- ament_cmake 和现代 Gazebo system plugin API
+- ament_cmake
+- 现代 Gazebo system plugin API
 
 > **项目状态**
 >
-> 当前已经完成 ROS 2 包结构、共享库插件、Gazebo 环境 hook 和 Livox 扫描模式数据的整理。示例插件可以验证插件加载和生命周期回调。Mid-70 非重复射线生成以及点云发布部分仍在开发中。
+> 当前已经完成 ROS 2 包结构、共享库插件、Gazebo 环境 hook、CSV 非重复扫描、物理射线检测和 Gazebo PointCloudPacked 发布。ROS 2 点云输出通过 ros_gz_bridge 转换为 sensor_msgs/msg/PointCloud2。
 
 ## 项目背景
 
-原项目提供了有价值的 Livox 扫描模式数据，但其构建和运行方式无法直接适配 ROS 2 Jazzy 与 Gazebo Harmonic。本项目保留这些扫描模式数据，并将运行时集成迁移到 Gazebo Sim system plugin 和 ROS 2 工作空间规范。
+原项目提供了有价值的 Livox 扫描模式数据，但其构建方式和接口无法直接适配 ROS 2 Jazzy 与 Gazebo Harmonic。本项目保留这些扫描模式数据，并将 Livox 激光雷达模拟逻辑迁移到 Gazebo Harmonic 和 ROS 2 工作空间规范。
 
 ## 当前功能
 
@@ -39,7 +40,12 @@
 | 自动发现 | 通过 GZ_SIM_SYSTEM_PLUGIN_PATH 环境 hook |
 | 生命周期诊断 | ISystemConfigure 启动日志和 gzmsg 更新日志 |
 | 扫描模式数据 | HAP、Avia、Horizon、Mid-360、Mid-40、Mid-70、Tele CSV 文件 |
-| ROS 点云发布 | 当前示例插件尚未实现 |
+| 扫描窗口 | 按 `<update_rate>` 以 `[上次更新时间, 当前更新时间)` 发布完整窗口 |
+| 降采样 | `<downsample>N</downsample>` 均匀保留 CSV 第 `0、N、2N...` 个样本 |
+| Gazebo 点云发布 | `gz.msgs.PointCloudPacked`，topic 使用 `<topic>` |
+| ROS 点云发布 | 通过 ros_gz_bridge 转换为 `sensor_msgs/msg/PointCloud2` |
+| 测距噪声 | 沿每条射线加入可配置的高斯距离噪声，单位为米 |
+| Livox link 模型 | `livox_mid70_link` 统一生成 pose、惯性、mesh visual、碰撞体和 sensor |
 
 ## 目录结构
 
@@ -68,6 +74,30 @@ Time/s,Azimuth/deg,Zenith/deg
 ~~~
 
 例如，scan_mode/mid70.csv 保存了描述 Mid-70 扫描模式的时间序列、方位角和天顶角数据。
+
+### 更新周期与降采样
+
+`<update_rate>10</update_rate>` 表示每 `T = 1 / 10 = 0.1 s` 发布一帧。Mid-70 的 CSV 约为每秒 100000 个样本，因此 `downsample=1` 时每帧约生成 10000 条射线：
+
+~~~xml
+<xacro:livox_mid70_link
+  link_name="livox_mid_70"
+  update_rate="10"
+  downsample="2"/>
+~~~
+
+`downsample=2` 保留第 `0、2、4...` 个 CSV 样本，射线数量约减半；`downsample=10` 约保留十分之一。时间窗口仍按原始 CSV 的时间轴计算，因此降采样不会改变扫描模式的播放速度。
+
+### 高斯噪声
+
+`noise_mean` 和 `noise_stddev` 表示沿射线方向的距离噪声，单位为米。Mid-70 xacro 默认使用 `stddev=0.01`，可以将其设为 `0` 关闭噪声：
+
+~~~xml
+<xacro:livox_mid70_link
+  link_name="livox_mid_70"
+  noise_mean="0.0"
+  noise_stddev="0.01"/>
+~~~
 
 ## 环境要求
 

@@ -1,0 +1,268 @@
+<?xml version="1.0"?>
+<sdf version="1.8"
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  xmlns:gz="http://gazebosim.org">
+
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid70.xacro"/>
+
+  <world name="livox_example">
+    <!-- Keep movable objects suspended while allowing GUI pose commands. -->
+    <gravity>0 0 0</gravity>
+    <physics name="1ms" type="dart">
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1.0</real_time_factor>
+      <dart>
+        <collision_detector>bullet</collision_detector>
+      </dart>
+    </physics>
+
+    <!-- Gazebo built-in systems required by this example. The only custom
+         user plugin loaded below is liblivox_lidar_gz_sensor.so. -->
+    <plugin
+      filename="gz-sim-physics-system"
+      name="gz::sim::systems::Physics"/>
+    <plugin
+      filename="gz-sim-sensors-system"
+      name="gz::sim::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+    <plugin
+      filename="gz-sim-scene-broadcaster-system"
+      name="gz::sim::systems::SceneBroadcaster"/>
+    <plugin
+      filename="gz-sim-user-commands-system"
+      name="gz::sim::systems::UserCommands"/>
+
+    <light name="sun" type="directional">
+      <pose>0 0 8 0 0 0</pose>
+      <direction>-0.4 0.2 -0.9</direction>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <cast_shadows>true</cast_shadows>
+    </light>
+
+    <model name="ground">
+      <static>true</static>
+      <link name="ground_link">
+        <collision name="ground_collision">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+        </collision>
+        <visual name="ground_visual">
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>20 20</size>
+            </plane>
+          </geometry>
+          <material>
+            <ambient>0.25 0.25 0.25 1</ambient>
+            <diffuse>0.35 0.35 0.35 1</diffuse>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Four dynamic walls can be selected and moved with Gazebo's GUI. -->
+    <model name="wall_north">
+      <static>false</static>
+      <pose>0 5 2.5 0 0 0</pose>
+      <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>21.0</ixx>
+            <iyy>83.3</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
+        <collision name="wall_collision">
+          <geometry><box><size>10 0.2 5</size></box></geometry>
+        </collision>
+        <visual name="wall_visual">
+          <geometry><box><size>10 0.2 5</size></box></geometry>
+          <material><diffuse>0.75 0.75 0.78 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_south">
+      <static>false</static>
+      <pose>0 -5 2.5 0 0 0</pose>
+      <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>21.0</ixx>
+            <iyy>83.3</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
+        <collision name="wall_collision">
+          <geometry><box><size>10 0.2 5</size></box></geometry>
+        </collision>
+        <visual name="wall_visual">
+          <geometry><box><size>10 0.2 5</size></box></geometry>
+          <material><diffuse>0.75 0.75 0.78 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_east">
+      <static>false</static>
+      <pose>5 0 2.5 0 0 0</pose>
+      <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>83.3</ixx>
+            <iyy>21.0</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
+        <collision name="wall_collision">
+          <geometry><box><size>0.2 10 5</size></box></geometry>
+        </collision>
+        <visual name="wall_visual">
+          <geometry><box><size>0.2 10 5</size></box></geometry>
+          <material><diffuse>0.75 0.75 0.78 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <model name="wall_west">
+      <static>false</static>
+      <pose>-5 0 2.5 0 0 0</pose>
+      <link name="wall_link">
+        <inertial>
+          <mass>10.0</mass>
+          <inertia>
+            <ixx>83.3</ixx>
+            <iyy>21.0</iyy>
+            <izz>83.3</izz>
+          </inertia>
+        </inertial>
+        <collision name="wall_collision">
+          <geometry><box><size>0.2 10 5</size></box></geometry>
+        </collision>
+        <visual name="wall_visual">
+          <geometry><box><size>0.2 10 5</size></box></geometry>
+          <material><diffuse>0.75 0.75 0.78 1</diffuse></material>
+        </visual>
+      </link>
+    </model>
+
+    <!-- Minimal robot: a cone-shaped base_link with a Mid-70 on its top. -->
+    <model name="livox_example_robot_1">
+      <static>false</static>
+      <pose>-1 0 0.6 0 0 1.5708</pose>
+
+      <link name="base_link_left">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.2</ixx>
+            <iyy>0.2</iyy>
+            <izz>0.2</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_visual">
+          <geometry>
+            <cone>
+              <radius>0.55</radius>
+              <length>1.2</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.12 0.28 0.75 1</ambient>
+            <diffuse>0.18 0.40 0.95 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <collision name="base_collision">
+          <geometry>
+            <cone>
+              <radius>0.55</radius>
+              <length>1.2</length>
+            </cone>
+          </geometry>
+        </collision>
+      </link>
+
+      <xacro:livox_mid70_link
+        link_name="livox_left"
+        link_pose="0 0 0.6 0 0 0"
+        update_rate="10"
+        downsample="10"
+        noise_stddev="0.01"/>
+
+      <joint name="livox_mount_joint" type="fixed">
+        <parent>base_link_left</parent>
+        <child>livox_left</child>
+      </joint>
+
+      <!-- The example's only custom user plugin. -->
+      <plugin
+        filename="liblivox_lidar_gz_sensor.so"
+        name="livox_lidar_system::LivoxLidarSystem"/>
+    </model>
+
+    <model name="livox_example_robot_2">
+      <static>false</static>
+      <pose>1 0 0.6 0 0 0</pose>
+
+      <link name="base_link_right">
+        <inertial>
+          <mass>1.0</mass>
+          <inertia>
+            <ixx>0.2</ixx>
+            <iyy>0.2</iyy>
+            <izz>0.2</izz>
+          </inertia>
+        </inertial>
+        <visual name="base_visual">
+          <geometry>
+            <cone>
+              <radius>0.55</radius>
+              <length>1.2</length>
+            </cone>
+          </geometry>
+          <material>
+            <ambient>0.12 0.28 0.75 1</ambient>
+            <diffuse>0.18 0.40 0.95 1</diffuse>
+            <specular>0.2 0.2 0.2 1</specular>
+          </material>
+        </visual>
+        <collision name="base_collision">
+          <geometry>
+            <cone>
+              <radius>0.55</radius>
+              <length>1.2</length>
+            </cone>
+          </geometry>
+        </collision>
+      </link>
+
+      <xacro:livox_mid70_link
+        link_name="livox_right"
+        link_pose="0 0 0.6 0 0 0"
+        update_rate="10"
+        downsample="10"
+        noise_stddev="0.01"/>
+
+      <joint name="livox_mount_joint" type="fixed">
+        <parent>base_link_right</parent>
+        <child>livox_right</child>
+      </joint>
+
+      <!-- The example's only custom user plugin. -->
+      <plugin
+        filename="liblivox_lidar_gz_sensor.so"
+        name="livox_lidar_system::LivoxLidarSystem"/>
+    </model>
+  </world>
+</sdf>

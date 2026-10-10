@@ -1,0 +1,123 @@
+<?xml version="1.0"?>
+<robot
+  xmlns:xacro="http://www.ros.org/wiki/xacro"
+  xmlns:gz="http://gazebosim.org">
+  <!-- Internal sensor expansion. Names are derived from link_name so the
+       caller cannot create a sensor/frame pair that disagrees with the link. -->
+  <xacro:macro name="livox_mid70_sensor"
+    params="
+      link_name
+      model:=mid70
+      scan_file:='$(find livox_lidar_gz_sensor)/scan_mode/mid70.csv'
+      update_rate:=20
+      sensor_pose:='0 1 0 0 0 0'
+      range_min:=0.1
+     range_max:=70.0
+      downsample:=1
+     noise_mean:=0.0
+      noise_stddev:=0.01">
+
+    <sensor
+      name="${link_name}_sensor"
+      type="custom"
+      gz:type="livox_mid70">
+
+      <pose>${sensor_pose}</pose>
+      <always_on>true</always_on>
+      <update_rate>${update_rate}</update_rate>
+      <topic>/${link_name}/points</topic>
+
+      <gz:livox_config>
+        <model>${model}</model>
+        <scan_file>${scan_file}</scan_file>
+        <frame_id>${link_name}_frame</frame_id>
+        <range_min>${range_min}</range_min>
+        <range_max>${range_max}</range_max>
+       <downsample>${downsample}</downsample>
+        <noise>
+          <mean>${noise_mean}</mean>
+          <stddev>${noise_stddev}</stddev>
+        </noise>
+      </gz:livox_config>
+
+    </sensor>
+  </xacro:macro>
+
+  <xacro:macro name="livox_mid70_link"
+    params="
+      link_name
+      link_pose:='0 0 0 0 0 0'
+      sensor_pose:='0 0 0 0 0 0'
+      mesh_file:='$(find livox_lidar_gz_sensor)/meshes/mid70.dae'
+      mesh_scale:='1 1 1'
+      mesh_pose:='0 0 0 0 0 0'
+      model:=mid70
+      scan_file:='$(find livox_lidar_gz_sensor)/scan_mode/mid70.csv'
+      update_rate:=20
+      range_min:=0.1
+      range_max:=70.0
+      downsample:=1
+      noise_mean:=0.0
+      noise_stddev:=0.01">
+
+    <link name="${link_name}">
+      <pose>${link_pose}</pose>
+      <inertial>
+        <mass>0.1</mass>
+        <inertia>
+          <ixx>0.000166667</ixx>
+          <iyy>0.000166667</iyy>
+          <izz>0.000166667</izz>
+        </inertia>
+      </inertial>
+
+      <xacro:if value="${mesh_file != ''}">
+        <visual name="${link_name}_visual">
+          <pose>${mesh_pose}</pose>
+          <geometry>
+            <mesh>
+              <uri>${mesh_file}</uri>
+              <scale>${mesh_scale}</scale>
+            </mesh>
+          </geometry>
+        </visual>
+      </xacro:if>
+      <xacro:if value="${mesh_file == ''}">
+        <visual name="${link_name}_visual_placeholder">
+          <geometry>
+            <box>
+              <size>0.1 0.1 0.1</size>
+            </box>
+          </geometry>
+        </visual>
+      </xacro:if>
+
+      <collision name="${link_name}_collision">
+        <geometry>
+          <box>
+            <size>0.1 0.1 0.1</size>
+          </box>
+        </geometry>
+      </collision>
+
+      <xacro:livox_mid70_sensor
+        link_name="${link_name}"
+        model="${model}"
+        scan_file="${scan_file}"
+        update_rate="${update_rate}"
+        sensor_pose="${sensor_pose}"
+        range_min="${range_min}"
+        range_max="${range_max}"
+        downsample="${downsample}"
+        noise_mean="${noise_mean}"
+        noise_stddev="${noise_stddev}"/>
+    </link>
+
+    <!-- PosePublisher can expose this fixed link as the point-cloud TF frame. -->
+    <link name="${link_name}_frame"/>
+    <joint name="${link_name}_frame_joint" type="fixed">
+      <parent>${link_name}</parent>
+      <child>${link_name}_frame</child>
+    </joint>
+  </xacro:macro>
+</robot>

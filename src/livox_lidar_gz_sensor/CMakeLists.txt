@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.22.1)
 project(livox_lidar_gz_sensor)
 
@@ -46,6 +49,11 @@ target_include_directories(${PROJECT_NAME}
 )
 
 install(TARGETS ${PROJECT_NAME} LIBRARY DESTINATION lib)
+
+install(
+  DIRECTORY include/
+  DESTINATION include
+)
 
 install(
   DIRECTORY urdf scan_mode meshes

@@ -1,9 +1,14 @@
 <?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2026 FZ_XiaoXi -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <sdf version="1.8"
   xmlns:xacro="http://www.ros.org/wiki/xacro"
   xmlns:gz="http://gazebosim.org">
 
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid70.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid360.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid40.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_horizon.xacro"/>
 
   <world name="livox_example">
     <!-- Keep movable objects suspended while allowing GUI pose commands. -->
@@ -76,7 +81,7 @@
           <mass>10.0</mass>
           <inertia>
             <ixx>21.0</ixx>
-            <iyy>83.3</iyy>
+            <iyy>104.2</iyy>
             <izz>83.3</izz>
           </inertia>
         </inertial>
@@ -98,7 +103,7 @@
           <mass>10.0</mass>
           <inertia>
             <ixx>21.0</ixx>
-            <iyy>83.3</iyy>
+            <iyy>104.2</iyy>
             <izz>83.3</izz>
           </inertia>
         </inertial>
@@ -119,7 +124,7 @@
         <inertial>
           <mass>10.0</mass>
           <inertia>
-            <ixx>83.3</ixx>
+            <ixx>104.2</ixx>
             <iyy>21.0</iyy>
             <izz>83.3</izz>
           </inertia>
@@ -141,7 +146,7 @@
         <inertial>
           <mass>10.0</mass>
           <inertia>
-            <ixx>83.3</ixx>
+            <ixx>104.2</ixx>
             <iyy>21.0</iyy>
             <izz>83.3</izz>
           </inertia>
@@ -193,11 +198,11 @@
         </collision>
       </link>
 
-      <xacro:livox_mid70_link
+      <xacro:livox_horizon_link
         link_name="livox_left"
         link_pose="0 0 0.6 0 0 0"
         update_rate="10"
-        downsample="10"
+        downsample="1"
         noise_stddev="0.01"/>
 
       <joint name="livox_mount_joint" type="fixed">
@@ -247,11 +252,11 @@
         </collision>
       </link>
 
-      <xacro:livox_mid70_link
+      <xacro:livox_mid360_link
         link_name="livox_right"
         link_pose="0 0 0.6 0 0 0"
         update_rate="10"
-        downsample="10"
+        downsample="1"
         noise_stddev="0.01"/>
 
       <joint name="livox_mount_joint" type="fixed">

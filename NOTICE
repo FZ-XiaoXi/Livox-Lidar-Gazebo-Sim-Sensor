@@ -1,0 +1,70 @@
+Livox Lidar Gazebo Sim Sensor
+
+Copyright (c) 2026 FZ_XiaoXi for repository-original material.
+
+Except for third-party material listed below, the original ROS 2 / Gazebo Sim
+plugin migration, integration code, xacro configuration, and example
+orchestration in this repository are distributed under the Apache License,
+Version 2.0. See the repository-root LICENSE file.
+
+1. Upstream Livox scan data and CSV reader
+------------------------------------------
+
+Upstream project:
+
+  Livox laser simulation
+  https://github.com/Livox-SDK/livox_laser_simulation
+
+Copyright (c) 2021 livox
+
+The following files are from or derived from the upstream project and retain
+the MIT License:
+
+  src/livox_lidar_gz_sensor/include/csv_reader.hpp
+  src/livox_lidar_gz_sensor/scan_mode/HAP.csv
+  src/livox_lidar_gz_sensor/scan_mode/avia.csv
+  src/livox_lidar_gz_sensor/scan_mode/horizon.csv
+  src/livox_lidar_gz_sensor/scan_mode/mid360.csv
+  src/livox_lidar_gz_sensor/scan_mode/mid40.csv
+  src/livox_lidar_gz_sensor/scan_mode/mid70.csv
+  src/livox_lidar_gz_sensor/scan_mode/tele.csv
+
+The current mid360.csv has been modified from the upstream file by converting
+the timestamp sequence to seconds. This modification does not remove the
+upstream MIT notice or terms.
+
+MIT License
+
+Copyright (c) 2021 livox
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+2. Official Livox model meshes
+-----------------------------
+
+The files in src/livox_lidar_gz_sensor/meshes/ were downloaded from an
+official Livox model source and modified by manually translating their
+coordinates. They are not included in the MIT file list above and are not
+covered by the repository Apache license unless the applicable rights holder
+has authorized that use. Their exact redistribution terms and trademark
+conditions must be verified before publishing or redistributing these assets.
+
+This NOTICE records provenance and license information. It does not grant
+rights to third-party material or modify the terms of the Apache or MIT
+licenses.

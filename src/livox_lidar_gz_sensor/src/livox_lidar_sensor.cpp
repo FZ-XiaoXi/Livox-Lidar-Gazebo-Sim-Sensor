@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 #include <cmath>
 #include <algorithm>
 #include <limits>
@@ -8,7 +13,6 @@
 
 #include <gz/common/Console.hh>
 #include <gz/msgs/Utility.hh>
-#include <gz/sensors/Noise.hh>
 #include <gz/sensors/Util.hh>
 
 #include "livox_lidar_sensor.hpp"
@@ -20,20 +24,15 @@ using namespace livox_lidar_sensor;
 bool LivoxLidarSensor::Load(const sdf::Sensor &_sdf)
 {
 	const auto type = gz::sensors::customType(_sdf);
-	// const auto *profile = LivoxProfileRegistry::Find(type);
-	// if (nullptr == profile){
-	// 	gzerr << "[livox_lidar_gz_sensor] Failed to find Livox profile: " << type << std::endl;
-	// 	return false;
-	// }
-	// // this->profile_ = *profile;
-
 	// Load common sensor params
 	if (!gz::sensors::Sensor::Load(_sdf)){
         gzerr << "[livox_lidar_gz_sensor] Failed to load sensor: " << this->Name() << std::endl;
 		return false;
 	}
 
-    gzwarn << "[livox_lidar_gz_sensor] Loading Livox LIDAR type[" << type << "]" << " name[" << this->Name() << "]" << " update rate[" << this->UpdateRate() << "]" << std::endl;
+	gzmsg << "[livox_lidar_gz_sensor] Loading type[" << type
+	      << "] name[" << this->Name() << "] update_rate["
+	      << this->UpdateRate() << "]" << std::endl;
 	auto element = _sdf.Element();
 	if (element == nullptr || !element->HasElement("gz:livox_config"))
 	{
@@ -48,9 +47,6 @@ bool LivoxLidarSensor::Load(const sdf::Sensor &_sdf)
 	}
 
 
-	if (livox_config->HasElement("model"))
-    	this->model_ = livox_config->Get<std::string>("model");
-
 	if (livox_config->HasElement("scan_file"))
 		this->scanFileName_ = livox_config->Get<std::string>("scan_file");
 
@@ -64,6 +60,13 @@ bool LivoxLidarSensor::Load(const sdf::Sensor &_sdf)
 
 	if (livox_config->HasElement("range_max"))
 		this->rangeMax_ = livox_config->Get<double>("range_max");
+	if (!std::isfinite(this->rangeMin_) || !std::isfinite(this->rangeMax_) ||
+		this->rangeMin_ < 0.0 || this->rangeMax_ <= this->rangeMin_)
+	{
+		gzerr << "[livox_lidar_gz_sensor] range_min must be finite and non-negative, "
+		      << "and range_max must be greater than range_min" << std::endl;
+		return false;
+	}
 
 	if (livox_config->HasElement("downsample"))
 		this->downsample_ = livox_config->Get<unsigned int>("downsample");
@@ -114,20 +117,34 @@ bool LivoxLidarSensor::Load(const sdf::Sensor &_sdf)
 		const auto &sample = datas[i];
 		if (sample.size() != 3 || !std::isfinite(sample[0]) ||
 			!std::isfinite(sample[1]) || !std::isfinite(sample[2]) ||
-			(i > 0 && sample[0] <= datas[i - 1][0]))
+			(i > 0 && sample[0] < datas[i - 1][0]))
 		{
 			gzerr << "[livox_lidar_gz_sensor] CSV samples must have three "
-			      << "finite values and strictly increasing timestamps"
+			      << "finite values and non-decreasing timestamps"
 			      << std::endl;
 			return false;
 		}
 	}
 
-	// Normalize the pattern to time zero. Preserve its original duration
-	// before decimation so skipping rows does not slow down the scan.
+	// Normalize to zero and retain the pre-decimation duration so downsampling
+	// changes point density without changing the scan timeline.
 	const double firstSampleTime = datas.front()[0];
-	const double sampleInterval =
-		datas.back()[0] - datas[datas.size() - 2][0];
+	double sampleInterval = 0.0;
+	for (std::size_t i = datas.size(); i > 1; --i)
+	{
+		const double delta = datas[i - 1][0] - datas[i - 2][0];
+		if (delta > 0.0)
+		{
+			sampleInterval = delta;
+			break;
+		}
+	}
+	if (!(sampleInterval > 0.0))
+	{
+		gzerr << "[livox_lidar_gz_sensor] CSV must contain a positive time interval"
+		      << std::endl;
+		return false;
+	}
 	this->scanPatternDuration_ =
 		datas.back()[0] - firstSampleTime + sampleInterval;
 	this->scanRayCsvData_.clear();
@@ -157,40 +174,14 @@ bool LivoxLidarSensor::Load(const sdf::Sensor &_sdf)
 		return false;
 	}
 	
-	gzerr << "[livox_lidar_gz_sensor] Livox LIDAR Initialized Successfully - type[" << type << "]" << " name[" << this->Name() << "]" << " model[" << this->model_ << "]" << " scan_file[" << this->scanFileName_ << "]" << " frame_id[" << this->frameId_ << "]" << " range_min[" << this->rangeMin_ << "]" << " range_max[" << this->rangeMax_ << "]" << " downsample[" << this->downsample_ << "]" << " csv_points[" << this->scanRayCsvData_.size() << "/" << datas.size() << "]" << " pattern_period[" << this->scanPatternDuration_ << "]" << " topic[" << this->Topic() << "]" << std::endl;
-	
-	
+	gzmsg << "[livox_lidar_gz_sensor] Initialized type[" << type
+	      << "] name[" << this->Name() << "] frame_id["
+	      << this->frameId_ << "] topic["
+	      << this->Topic() << "] csv_points["
+	      << this->scanRayCsvData_.size() << "/" << datas.size()
+	      << "] pattern_period[" << this->scanPatternDuration_ << "]"
+	      << std::endl;
 
-	
-	
-
-	// // Advertise topic where data will be published
-	// this->pub = this->node.Advertise<gz::msgs::Double>(this->Topic());
-
-	// if (!_sdf.Element()->HasElement("gz:odometer"))
-	// {
-	// 	gzdbg << "No custom configuration for [" << this->Topic() << "]"
-	// 				 << std::endl;
-	// 	return true;
-	// }
-
-	// // Load custom sensor params
-	// auto customElem = _sdf.Element()->FindElement("gz:odometer");
-
-	// if (!customElem->HasElement("noise"))
-	// {
-	// 	gzdbg << "No noise for [" << this->Topic() << "]" << std::endl;
-	// 	return true;
-	// }
-
-	// sdf::Noise noiseSdf;
-	// noiseSdf.Load(customElem->FindElement("noise"));
-	// this->noise = gz::sensors::NoiseFactory::NewNoiseModel(noiseSdf);
-	// if (nullptr == this->noise)
-	// {
-	// 	gzerr << "Failed to load noise." << std::endl;
-	// 	return false;
-	// }
 
 	return true;
 }
@@ -203,13 +194,18 @@ bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration &_now)
 
 	std::vector<gz::math::Vector3d> outputPoints;
 	outputPoints.reserve(this->raycastResults_.size());
+	const bool applyNoise = this->noiseStdDev_ > 0.0 || this->noiseMean_ != 0.0;
+	std::normal_distribution<double> noiseDistribution;
+	if (this->noiseStdDev_ > 0.0)
+		noiseDistribution = std::normal_distribution<double>(
+			this->noiseMean_, this->noiseStdDev_);
 	for (const auto &result : this->raycastResults_)
 	{
 		if (std::isfinite(result.fraction) && result.fraction >= 0.0 &&
 			result.fraction < 1.0 && result.point.IsFinite())
 		{
 			gz::math::Vector3d outputPoint = result.point;
-			if (this->noiseStdDev_ > 0.0 || this->noiseMean_ != 0.0)
+			if (applyNoise)
 			{
 				const auto ray = result.rayEnd - result.rayStart;
 				const double rayLength = ray.Length();
@@ -217,9 +213,10 @@ bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration &_now)
 					continue;
 				const auto direction = ray / rayLength;
 				const double range = (result.point - result.rayStart).Dot(direction);
-				std::normal_distribution<double> distribution(
-					this->noiseMean_, this->noiseStdDev_);
-				const double noisyRange = range + distribution(this->noiseGenerator_);
+				const double noise = this->noiseStdDev_ > 0.0
+					? noiseDistribution(this->noiseGenerator_)
+					: this->noiseMean_;
+				const double noisyRange = range + noise;
 				if (!std::isfinite(noisyRange) || noisyRange < this->rangeMin_ ||
 					noisyRange > this->rangeMax_)
 					continue;
@@ -297,22 +294,6 @@ void LivoxLidarSensor::SetRaycastResults(
 	this->raycastResults_ = std::move(_results);
 }
 
-//////////////////////////////////////////////////
-void LivoxLidarSensor::NewPosition(const gz::math::Vector3d &_pos)
-{
-	if (!std::isnan(this->prevPos.X()))
-	{
-		this->totalDistance += this->prevPos.Distance(_pos);
-	}
-	this->prevPos = _pos;
-}
-
-//////////////////////////////////////////////////
-const gz::math::Vector3d &LivoxLidarSensor::Position() const
-{
-	return this->prevPos;
-}
-
 double LivoxLidarSensor::ScanPeriod() const
 {
 	return this->UpdateRate() > 0.0 ? 1.0 / this->UpdateRate() : 0.0;
@@ -353,20 +334,12 @@ LivoxLidarSensor::GenerateRays(double startTime, double duration) const
 		rays.emplace_back(direction * startRange, direction * endRange);
 	};
 
-	const auto firstAfter = [&](double sampleTime) {
+	const auto firstAtOrAfter = [&](double sampleTime) {
 		return static_cast<std::size_t>(std::lower_bound(
 			this->scanRayCsvData_.begin(), this->scanRayCsvData_.end(),
-			sampleTime + timeTolerance,
+			sampleTime - timeTolerance,
 			[](const std::vector<double> &_sample, double _time) {
 				return _sample[0] < _time;
-			}) - this->scanRayCsvData_.begin());
-	};
-	const auto afterLast = [&](double sampleTime) {
-		return static_cast<std::size_t>(std::upper_bound(
-			this->scanRayCsvData_.begin(), this->scanRayCsvData_.end(),
-			sampleTime + timeTolerance,
-			[](double _time, const std::vector<double> &_sample) {
-				return _time < _sample[0];
 			}) - this->scanRayCsvData_.begin());
 	};
 	const auto processRange = [&](std::size_t begin, std::size_t end) {
@@ -374,17 +347,15 @@ LivoxLidarSensor::GenerateRays(double startTime, double duration) const
 			addSample(index);
 	};
 
-	// Split windows across the original CSV duration, including windows longer
-	// than one full pattern. Right-closed windows include the endpoint sample
-	// and exclude the start sample, so adjacent frames neither lose nor repeat
-	// CSV rows.
+	// Split windows across the CSV duration. Left-closed, right-open ranges
+	// assign every boundary sample to exactly one frame.
 	double remaining = duration;
 	while (remaining > timeTolerance)
 	{
 		const double segment = std::min(
 			remaining, this->scanPatternDuration_ - windowStart);
 		const double windowEnd = windowStart + segment;
-		processRange(firstAfter(windowStart), afterLast(windowEnd));
+		processRange(firstAtOrAfter(windowStart), firstAtOrAfter(windowEnd));
 		remaining -= segment;
 		windowStart = 0.0;
 	}

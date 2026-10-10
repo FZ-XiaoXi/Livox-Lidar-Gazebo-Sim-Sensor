@@ -1,8 +1,12 @@
-#ifndef __LIVOX_LIDAR_SENSOR_HPP__
-#define __LIVOX_LIDAR_SENSOR_HPP__
+/*
+ * SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef LIVOX_LIDAR_SENSOR_HPP_
+#define LIVOX_LIDAR_SENSOR_HPP_
 
 #include <chrono>
-#include <cmath>
 #include <cstdint>
 #include <limits>
 #include <random>
@@ -13,7 +17,6 @@
 #include <gz/math/Vector3.hh>
 #include <gz/msgs/pointcloud_packed.pb.h>
 #include <gz/sensors/Sensor.hh>
-#include <gz/sensors/SensorTypes.hh>
 #include <gz/transport/Node.hh>
 
 namespace livox_lidar_sensor
@@ -39,15 +42,6 @@ namespace livox_lidar_sensor
     /// \brief Check whether the point-cloud topic has subscribers.
     public: virtual bool HasConnections() const override;
 
-    /// \brief Set the current postiion of the robot, so the odometer can
-    /// calculate the distance travelled.
-    /// \param[in] _pos Current position in world coordinates.
-    public: void NewPosition(const gz::math::Vector3d &_pos);
-
-    /// \brief Get the latest world postiion of the robot.
-    /// \return The latest position given to the odometer.
-    public: const gz::math::Vector3d &Position() const;
-
     /// \brief Generate rays for [startTime, startTime + duration), in seconds.
     public: std::vector<std::pair<gz::math::Vector3d, gz::math::Vector3d>>
         GenerateRays(double startTime, double duration) const;
@@ -66,21 +60,10 @@ namespace livox_lidar_sensor
       gz::math::Vector3d rayStart;
       gz::math::Vector3d rayEnd;
       double fraction{std::numeric_limits<double>::infinity()};
-      gz::math::Vector3d normal;
     };
 
     /// \brief Pass physics results to this sensor before Update().
     public: void SetRaycastResults(std::vector<RaycastResult> _results);
-
-    /// \brief Previous position of the robot.
-    private: gz::math::Vector3d prevPos{std::nan(""), std::nan(""),
-        std::nan("")};
-
-    /// \brief Latest total distance.
-    private: double totalDistance{0.0};
-
-    /// \brief Noise that will be applied to the sensor data
-    private: gz::sensors::NoisePtr noise{nullptr};
 
     /// \brief Node for communication
     private: gz::transport::Node node_;
@@ -91,7 +74,6 @@ namespace livox_lidar_sensor
     /// \brief Reused packed point-cloud message
     private: gz::msgs::PointCloudPacked pointCloudMsg_;
 
-    private: std::string model_;
     private: std::string scanFileName_;
     private: std::string frameId_;
     private: double rangeMin_{0.1};
@@ -113,4 +95,4 @@ namespace livox_lidar_sensor
   };
 }
 
-#endif  //__LIVOX_LIDAR_SENSOR_HPP__
+#endif  // LIVOX_LIDAR_SENSOR_HPP_

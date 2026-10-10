@@ -1,20 +1,32 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!-- SPDX-FileCopyrightText: 2026 FZ_XiaoXi -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
 <package format="3">
   <name>livox_lidar_example</name>
   <version>0.0.1</version>
   <description>Minimal Gazebo Sim example for the custom Livox lidar plugin.</description>
   <maintainer email="FZXiaoXi@oulook.com">FZ_XiaoXi</maintainer>
+  <author email="FZXiaoXi@outlook.com">FZ_XiaoXi</author>
   <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <build_depend>xacro</build_depend>
   <build_depend>livox_lidar_gz_sensor</build_depend>
 
+  <exec_depend>ament_index_python</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
   <exec_depend>livox_lidar_gz_sensor</exec_depend>
   <exec_depend>ros_gz_bridge</exec_depend>
   <exec_depend>ros_gz_sim</exec_depend>
+  <exec_depend>rosgraph_msgs</exec_depend>
   <exec_depend>rviz2</exec_depend>
+  <exec_depend>rviz_default_plugins</exec_depend>
+  <exec_depend>sensor_msgs</exec_depend>
+  <exec_depend>tf2_msgs</exec_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

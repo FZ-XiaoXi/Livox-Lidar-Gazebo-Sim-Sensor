@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+# SPDX-License-Identifier: Apache-2.0
+
 cmake_minimum_required(VERSION 3.22.1)
 project(livox_lidar_example)
 

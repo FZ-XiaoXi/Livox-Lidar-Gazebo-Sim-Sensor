@@ -1,9 +1,13 @@
-//
-// Created by lfc on 2021/3/1.
-//
+/*
+ * SPDX-FileCopyrightText: 2021 livox
+ * SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+ * SPDX-License-Identifier: MIT
+ *
+ * Derived from Livox laser simulation and modified for strict CSV validation.
+ */
 
-#ifndef SRC_GAZEBO_CSV_READER_HPP
-#define SRC_GAZEBO_CSV_READER_HPP
+#ifndef CSV_READER_HPP_
+#define CSV_READER_HPP_
 
 #include <fstream>
 #include <iostream>
@@ -56,18 +60,17 @@ class CsvReader {
                 }
             }
 
-            if (!valid || data.empty()) {
+            if (!valid || data.size() != 3) {
                 std::cerr << "cannot parse CSV line " << line_number
                           << ": " << line << "\n";
-                continue;
+                return false;
             }
 
             datas.push_back(std::move(data));
         }
 
-        std::cerr << "data size:" << datas.size() << "\n";
         return true;
     }
 };
 
-#endif  // SRC_GAZEBO_CSV_READER_HPP
+#endif  // CSV_READER_HPP_

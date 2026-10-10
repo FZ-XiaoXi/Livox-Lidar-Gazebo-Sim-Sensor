@@ -1,5 +1,10 @@
-#ifndef __LIVOX_LIDAR_SYSTEM_HPP__
-#define __LIVOX_LIDAR_SYSTEM_HPP__
+/*
+ * SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+#ifndef LIVOX_LIDAR_SYSTEM_HPP_
+#define LIVOX_LIDAR_SYSTEM_HPP_
 
 #include <chrono>
 #include <unordered_map>
@@ -8,6 +13,7 @@
 #include <gz/sim/EventManager.hh>
 #include <gz/sim/System.hh>
 #include <gz/transport/Node.hh>
+#include <string>
 #include "livox_lidar_sensor.hpp"
 
  
@@ -70,6 +76,7 @@ namespace livox_lidar_system
     /// \brief Publishes world to sensor-frame transforms for ROS consumers.
     private: gz::transport::Node tfNode_;
     private: gz::transport::Node::Publisher tfPublisher_;
+    private: std::string tfTopic_;
     private: std::chrono::steady_clock::duration lastTfPublishTime_{};
     private: bool tfPublished_{false};
 
@@ -80,4 +87,4 @@ namespace livox_lidar_system
   };
 }
 
-#endif  //__LIVOX_LIDAR_SYSTEM_HPP__
+#endif  // LIVOX_LIDAR_SYSTEM_HPP_

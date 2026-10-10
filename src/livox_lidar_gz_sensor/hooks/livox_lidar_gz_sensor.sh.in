@@ -1,2 +1,5 @@
+# SPDX-FileCopyrightText: 2026 FZ_XiaoXi
+# SPDX-License-Identifier: Apache-2.0
+
 ament_prepend_unique_value GZ_SIM_SYSTEM_PLUGIN_PATH "$AMENT_CURRENT_PREFIX/lib"
 ament_prepend_unique_value GZ_SIM_RESOURCE_PATH "$AMENT_CURRENT_PREFIX/share/@PROJECT_NAME@"

@@ -1,2 +1,45 @@
+# Standalone package build products
+/build/
+/install/
+/log/
+
+# CMake and generated test output
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+compile_commands.json
+CTestTestfile.cmake
+Makefile
+Testing/
+_deps/
+
+# Python launch caches
 __pycache__/
 *.py[cod]
+.pytest_cache/
+.mypy_cache/
+
+# IDE and editor files
+.vscode/
+.idea/
+.clangd/
+.cache/
+*.swp
+*.swo
+
+# Gazebo and ROS runtime data
+.gazebo/
+.gz/
+*.bag
+*.db3
+*.mcap
+*.log
+
+# Local environment files
+.env
+.env.*
+!.env.example
+
+# OS metadata
+.DS_Store
+Thumbs.db

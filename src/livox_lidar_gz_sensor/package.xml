@@ -1,13 +1,27 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<!-- SPDX-FileCopyrightText: 2026 FZ_XiaoXi -->
+<!-- Package contains Apache-2.0 code and file-scoped MIT components; see NOTICE. -->
 <package format="3">
   <name>livox_lidar_gz_sensor</name>
   <version>0.0.1</version>
   <description>Gazebo Sim system plugin for Livox lidar experiments</description>
   <maintainer email="FZXiaoXi@oulook.com">FZ_XiaoXi</maintainer>
+  <author email="FZXiaoXi@outlook.com">FZ_XiaoXi</author>
   <license>Apache-2.0</license>
+  <license>MIT</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>gz_cmake_vendor</depend>
+  <depend>gz_common_vendor</depend>
+  <depend>gz_math_vendor</depend>
+  <depend>gz_msgs_vendor</depend>
+  <depend>gz_plugin_vendor</depend>
+  <depend>gz_sensors_vendor</depend>
+  <depend>gz_sim_vendor</depend>
+  <depend>gz_transport_vendor</depend>
+  <depend>sdformat_vendor</depend>
+  <exec_depend>xacro</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

@@ -14,7 +14,6 @@
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_tele.xacro"/>
 
   <world name="livox_example">
-    <!-- Keep movable objects suspended while allowing GUI pose commands. -->
     <gravity>0 0 0</gravity>
     <physics name="1ms" type="dart">
       <max_step_size>0.001</max_step_size>
@@ -24,8 +23,6 @@
       </dart>
     </physics>
 
-    <!-- Gazebo built-in systems required by this example. The only custom
-         user plugin loaded below is liblivox_lidar_gz_sensor.so. -->
     <plugin
       filename="gz-sim-physics-system"
       name="gz::sim::systems::Physics"/>
@@ -55,9 +52,6 @@
         <collision name="ground_collision">
           <pose>0 0 -0.05 0 0 0</pose>
           <geometry>
-            <!-- Keep the physics surface bounded like the visible floor.
-                 An SDF plane is infinite and creates very distant returns
-                 for rays only slightly below the horizon. -->
             <box><size>20 20 0.1</size></box>
           </geometry>
         </collision>
@@ -76,7 +70,6 @@
       </link>
     </model>
 
-    <!-- Four dynamic walls can be selected and moved with Gazebo's GUI. -->
     <model name="wall_north">
       <static>false</static>
       <pose>0 5 2.5 0 0 0</pose>
@@ -165,7 +158,6 @@
       </link>
     </model>
 
-    <!-- Minimal robot: a cone-shaped base_link with a Mid-70 on its top. -->
     <model name="livox_example_robot_1">
       <static>false</static>
       <pose>-1 0 0.6 0 0 1.5708</pose>
@@ -202,8 +194,6 @@
         </collision>
       </link>
 
-      <!-- Keep the sensor body above the cone tip; the example uses a
-           noise-free cloud so ground-plane geometry is easy to inspect. -->
       <xacro:livox_mid360_link
         link_name="livox_left"
         link_pose="0 0 0.6 0 0 0"
@@ -258,7 +248,7 @@
         </collision>
       </link>
 
-      <xacro:livox_avia_link
+      <xacro:livox_mid70_link
         link_name="livox_right"
         link_pose="0 0 0.6 0 0 0"
         update_rate="10"

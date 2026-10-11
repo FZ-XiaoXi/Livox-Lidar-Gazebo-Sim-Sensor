@@ -92,6 +92,7 @@
              computed mass correct on SDFormat versions where density is used
              when expanding auto inertia. -->
         <density>1490.077114</density>
+        <pose>-0.03 0 0 0 0 0</pose>
         <geometry>
           <box>
             <size>0.097 0.064 0.0627</size>

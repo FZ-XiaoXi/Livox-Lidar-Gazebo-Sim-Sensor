@@ -89,6 +89,7 @@
 
       <collision name="${link_name}_collision">
         <density>1379.944190</density>
+        <pose>-0.045 0 0 0 0 0</pose>
         <geometry>
           <box>
             <size>0.091 0.0612 0.0648</size>

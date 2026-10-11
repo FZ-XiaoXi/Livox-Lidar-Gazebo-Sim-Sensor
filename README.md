@@ -38,14 +38,13 @@ ros_ws/
 ├── README.md
 ├── LICENSE
 ├── NOTICE
-├── RELEASE_AUDIT.md
 └── src/
     ├── livox_lidar_gz_sensor/      # Gazebo Sim 插件包
     │   ├── include/                # 头文件
     │   ├── src/                    # 源码
     │   ├── urdf/                   # 传感器 xacro 宏
     │   ├── scan_mode/              # 射线坐标文件
-    │   └── meshes/                 # 可选的 Gazebo 视觉网格
+    │   └── meshes/                 # 激光雷达模型
     └── livox_lidar_example/        # 雷达仿真示例包
         ├── worlds/                 # 两个示例机器人、四面墙和地面
         ├── config/                 # bridge 与可选 RViz 配置
@@ -61,7 +60,7 @@ ros_ws/
 - ROS 2 Jazzy
 - Gazebo Harmonic
 - `ament_cmake`、`colcon`、`xacro`
-- 示例运行依赖：`ros_gz_sim`、`ros_gz_bridge`；使用示例 RViz 界面时再安装 `rviz2`
+- 示例运行依赖：`ros_gz_sim`、`ros_gz_bridge`、`rviz2`、`robot_state_publisher`
 - 射线物理后端：当前插件射线仿真使用 DART + Bullet。Gazebo ODE 不支持本插件使用的 raycast 查询。
 
 ## 构建
@@ -87,10 +86,9 @@ source install/setup.bash
 - 每个机器人各有一个 model 级 `LivoxLidarSystem` 插件实例；
 - 四面墙壁和地面；
 - `ros_gz_bridge` 桥接 GZ 与 ROS 2 点云 / TF；
-- 可选的 RViz2 点云显示配置；
 - 关闭重力，因此可交互实体不会自行掉落，方便移动物体测试射线效果。
 
-示例中的 RobotModel 和 mesh 仅用于辅助观察模型位置，不是插件运行条件，也不属于本项目的传感器算法研究范围。只验证点云时，可以关闭 RViz：
+示例中的 RobotModel 和 mesh 仅用于辅助观察模型位置，不是插件运行条件，也不属于本项目的传感器算法研究范围。
 
 一键启动：
 
@@ -101,13 +99,11 @@ source install/setup.bash
 启动参数：
 
 ```bash
-./src/livox_lidar_example/run_livox_example.sh rviz:=false
 ./src/livox_lidar_example/run_livox_example.sh gz_verbosity:=4
 ```
 
 | 参数 | 默认值 | 作用 |
 | --- | --- | --- |
-| `rviz` | `true` | 是否启动 RViz2 |
 | `gz_verbosity` | `3` | Gazebo 日志等级；`4` 显示更多调试信息 |
 
 示例 ROS topic 和 TF：

@@ -5,6 +5,8 @@
 
 # Livox Lidar Gazebo Sim Sensor
 
+**[English](README.en.md) | 简体中文**
+
 基于 ROS 2 Jazzy 与 Gazebo Harmonic 的 Livox 激光雷达模拟插件
 
 <p>

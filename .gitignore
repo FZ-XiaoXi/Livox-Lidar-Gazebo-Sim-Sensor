@@ -24,6 +24,7 @@ _deps/
 *.d
 *.o
 *.obj
+!src/livox_lidar_example/urdf/robot_base_cone.obj
 *.so
 *.so.*
 *.dll

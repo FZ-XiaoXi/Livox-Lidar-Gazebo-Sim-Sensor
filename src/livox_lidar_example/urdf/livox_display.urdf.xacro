@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<!-- SPDX-FileCopyrightText: 2026 FZ_XiaoXi -->
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="livox_display_model">
+  <xacro:arg name="root_frame" default="livox_left_frame"/>
+  <xacro:arg name="base_link" default="base_link_left_visual"/>
+  <xacro:arg name="mesh_file" default="package://livox_lidar_gz_sensor/meshes/mid70.dae"/>
+
+  <!-- The root is the dynamic sensor frame published by the Gazebo plugin. -->
+  <link name="$(arg root_frame)">
+    <visual name="livox_visual">
+      <geometry>
+        <mesh filename="$(arg mesh_file)"/>
+      </geometry>
+    </visual>
+  </link>
+
+  <!-- The visual-only mesh matches the Gazebo cone dimensions. -->
+  <link name="$(arg base_link)">
+    <visual name="base_visual">
+      <geometry>
+        <mesh filename="package://livox_lidar_example/urdf/robot_base_cone.obj"/>
+      </geometry>
+      <material name="base_material">
+        <color rgba="0.18 0.40 0.95 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="$(arg base_link)_joint" type="fixed">
+    <parent link="$(arg root_frame)"/>
+    <child link="$(arg base_link)"/>
+    <!-- Gazebo's cone link is centered at the model pose and has a 1.2 m
+         length. The sensor link is mounted 0.6 m above that center. -->
+    <origin xyz="0 0 -0.6" rpy="0 0 0"/>
+  </joint>
+</robot>

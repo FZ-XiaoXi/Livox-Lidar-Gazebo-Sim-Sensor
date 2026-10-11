@@ -55,15 +55,20 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
-2. Official Livox model meshes
------------------------------
+2. Third-party model mesh assets
+--------------------------------
 
-The files in src/livox_lidar_gz_sensor/meshes/ were downloaded from an
-official Livox model source and modified by manually translating their
-coordinates. They are not included in the MIT file list above and are not
-covered by the repository Apache license unless the applicable rights holder
-has authorized that use. Their exact redistribution terms and trademark
-conditions must be verified before publishing or redistributing these assets.
+The HAP, Avia, Mid-360, and Tele DAE files are downloaded model assets that
+were manually translated to match the current visual coordinate convention.
+The Mid-70 DAE is a separate downloaded asset. Horizon and Mid-40 xacro files
+do not reference their historical DAE placeholders because those products are
+no longer supported by the official website; their xacro dynamics and scan
+configuration remain unverified.
+
+None of these mesh files is included in the MIT file list above or covered by
+the repository Apache license. Model accuracy, original sources,
+redistribution terms, coordinate modifications, and trademark conditions must
+be verified before publishing or redistributing any mesh asset.
 
 This NOTICE records provenance and license information. It does not grant
 rights to third-party material or modify the terms of the Apache or MIT

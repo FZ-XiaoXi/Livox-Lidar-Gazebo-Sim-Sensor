@@ -16,7 +16,7 @@
       range_max:=70.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <sensor
       name="${link_name}_sensor"
@@ -57,17 +57,13 @@
       range_max:=70.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <link name="${link_name}">
       <pose>${link_pose}</pose>
-      <inertial>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.000166667</ixx>
-          <iyy>0.000166667</iyy>
-          <izz>0.000166667</izz>
-        </inertia>
+      <!-- Body envelope (x/y/z): 97 x 64 x 62.7 mm; mass: 580 g. -->
+      <inertial auto="true">
+        <mass>0.58</mass>
       </inertial>
 
       <xacro:if value="${mesh_file != ''}">
@@ -92,9 +88,13 @@
       </xacro:if>
 
       <collision name="${link_name}_collision">
+        <!-- 0.58 kg / (0.097 m * 0.064 m * 0.0627 m). This keeps the
+             computed mass correct on SDFormat versions where density is used
+             when expanding auto inertia. -->
+        <density>1490.077114</density>
         <geometry>
           <box>
-            <size>0.1 0.1 0.1</size>
+            <size>0.097 0.064 0.0627</size>
           </box>
         </geometry>
       </collision>

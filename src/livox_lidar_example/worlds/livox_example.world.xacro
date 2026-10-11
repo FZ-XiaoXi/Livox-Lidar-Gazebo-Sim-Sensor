@@ -9,6 +9,9 @@
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid360.xacro"/>
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid40.xacro"/>
   <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_horizon.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_avia.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_HAP.xacro"/>
+  <xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_tele.xacro"/>
 
   <world name="livox_example">
     <!-- Keep movable objects suspended while allowing GUI pose commands. -->
@@ -50,11 +53,12 @@
       <static>true</static>
       <link name="ground_link">
         <collision name="ground_collision">
+          <pose>0 0 -0.05 0 0 0</pose>
           <geometry>
-            <plane>
-              <normal>0 0 1</normal>
-              <size>20 20</size>
-            </plane>
+            <!-- Keep the physics surface bounded like the visible floor.
+                 An SDF plane is infinite and creates very distant returns
+                 for rays only slightly below the horizon. -->
+            <box><size>20 20 0.1</size></box>
           </geometry>
         </collision>
         <visual name="ground_visual">
@@ -198,7 +202,9 @@
         </collision>
       </link>
 
-      <xacro:livox_horizon_link
+      <!-- Keep the sensor body above the cone tip; the example uses a
+           noise-free cloud so ground-plane geometry is easy to inspect. -->
+      <xacro:livox_mid360_link
         link_name="livox_left"
         link_pose="0 0 0.6 0 0 0"
         update_rate="10"
@@ -252,7 +258,7 @@
         </collision>
       </link>
 
-      <xacro:livox_mid360_link
+      <xacro:livox_avia_link
         link_name="livox_right"
         link_pose="0 0 0.6 0 0 0"
         update_rate="10"

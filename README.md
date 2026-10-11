@@ -3,51 +3,54 @@
 
 <div align="center">
 
-# Livox 激光雷达 Gazebo Sim 仿真工作区
+# Livox Lidar Gazebo Sim Sensor
 
-面向 ROS 2 Jazzy、Gazebo Harmonic 的 CSV 扫描模式 Livox 激光雷达插件与示例工程。
+基于 ROS 2 Jazzy 与 Gazebo Harmonic 的 Livox 激光雷达模拟插件
 
 <p>
-  <a href="https://example.invalid/PROJECT_URL"><img src="https://img.shields.io/badge/project-Livox%20Gazebo%20Sim-0f766e?logo=gazebo&logoColor=white" alt="Project"></a>
-  <a href="https://example.invalid/PROJECT_URL"><img src="https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"></a>
-  <a href="https://example.invalid/PROJECT_URL"><img src="https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros&logoColor=white" alt="ROS 2 Jazzy"></a>
-  <a href="https://example.invalid/PROJECT_URL"><img src="https://img.shields.io/badge/Gazebo-Harmonic-FFB81C?logo=gazebo&logoColor=111827" alt="Gazebo Harmonic"></a>
-  <a href="https://example.invalid/PROJECT_URL"><img src="https://img.shields.io/badge/license-Apache--2.0%20%2B%20MIT-64748b" alt="Apache-2.0 and MIT"></a>
+  <a href="https://ubuntu.com/"><img src="https://img.shields.io/badge/Ubuntu-24.04-E95420?logo=ubuntu&logoColor=white" alt="Ubuntu 24.04"></a>
+  <a href="https://www.ros.org/"><img src="https://img.shields.io/badge/ROS%202-Jazzy-22314E?logo=ros&logoColor=white" alt="ROS 2 Jazzy"></a>
+  <a href="https://gazebosim.org/"><img src="https://img.shields.io/badge/Gazebo-Harmonic-FFB81C?logo=gazebo&logoColor=111827" alt="Gazebo Harmonic"></a>
 </p>
 
 </div>
 
-本项目基于 [Livox laser simulation](https://example.invalid/UPSTREAM_REPOSITORY_URL) 的扫描模式数据和实现思路，迁移到现代 Gazebo Sim system plugin API。仓库包含一个可复用的传感器插件，以及一个可以直接启动和拖动实体的最简示例。
+本项目基于 [Livox laser simulation](https://github.com/Livox-SDK/livox_laser_simulation) 的扫描模式数据和实现思路，迁移到 Gazebo Harmonic 仿真平台。仓库根目录为 ROS 2工作空间，其中一个插件包、一个示例包。
+
+![](resources/1.jpg)
+
+> 维护者目前手上只有 Livox Mid-70，其余型号雷达的尺寸、质量、mesh、CSV 扫描轨迹和仿真效果没有实物验证，仅供参考。Horizon 和 Mid-40 因官网已经不再支持，本项目不配置默认 mesh，外形、质量、碰撞和点云结果均不保证正确。
 
 ## 快速导航
 
 | 内容 | 入口 |
 | --- | --- |
-| 用户快速开始 | [构建与启动](#用户部分) |
-| 插件 API 与参数 | [插件使用](#插件使用) |
-| 最简双雷达示例 | [示例工程](#示例工程) |
-| 开发者架构 | [开发部分](#开发部分) |
-| 参数兼容性与已知限制 | [兼容性与限制](#兼容性与限制) |
-| 许可与发布风险 | [许可审查与待办](#许可审查与待办) |
-| 详细发布审查 | [`RELEASE_AUDIT.md`](RELEASE_AUDIT.md) |
+| 安装、构建和一键运行 | [用户部分](#用户部分) |
+| 型号宏、参数和多雷达配置 | [插件使用](#插件使用) |
+| 双雷达可交互场景 | [示例工程](#示例工程) |
+| 插件架构 | [开发部分](#开发部分) |
+| 已知限制 | [约定和限制](#约定和限制) |
 
 ## 仓库结构
 
 ```text
-gz_ros_ws/
+ros_ws/
 ├── README.md
-├── src/
-│   ├── livox_lidar_gz_sensor/       # 可复用 Gazebo Sim 插件
-│   │   ├── include/                 # Sensor / System 头文件
-│   │   ├── src/                     # 射线、点云、TF、生命周期实现
-│   │   ├── urdf/                    # 各型号 link + custom sensor xacro
-│   │   ├── scan_mode/               # CSV 扫描模式
-│   │   └── meshes/                  # 官方下载后手动平移的型号 mesh
-│   ├── livox_lidar_example/         # 最简双雷达示例
-│   │   ├── worlds/                  # 两个可拖动机器人、四面墙、固定地面
-│   │   ├── config/                  # bridge 与 RViz 配置
-│   │   └── launch/                  # ROS 2 启动文件
-└── RELEASE_AUDIT.md                 # 发布前代码与许可审查
+├── LICENSE
+├── NOTICE
+├── RELEASE_AUDIT.md
+└── src/
+    ├── livox_lidar_gz_sensor/      # Gazebo Sim 插件包
+    │   ├── include/                # 头文件
+    │   ├── src/                    # 源码
+    │   ├── urdf/                   # 传感器 xacro 宏
+    │   ├── scan_mode/              # 射线坐标文件
+    │   └── meshes/                 # 可选的 Gazebo 视觉网格
+    └── livox_lidar_example/        # 雷达仿真示例包
+        ├── worlds/                 # 两个示例机器人、四面墙和地面
+        ├── config/                 # bridge 与可选 RViz 配置
+        ├── urdf/                   # 示例 RobotModel 描述（可选）
+        └── launch/                 # ROS 2 启动文件
 ```
 
 # 用户部分
@@ -56,13 +59,15 @@ gz_ros_ws/
 
 - Ubuntu 24.04
 - ROS 2 Jazzy
-- Gazebo Harmonic / Gazebo Sim 8
+- Gazebo Harmonic
 - `ament_cmake`、`colcon`、`xacro`
+- 示例运行依赖：`ros_gz_sim`、`ros_gz_bridge`；使用示例 RViz 界面时再安装 `rviz2`
+- 射线物理后端：当前插件射线仿真使用 DART + Bullet。Gazebo ODE 不支持本插件使用的 raycast 查询。
 
 ## 构建
 
 ```bash
-cd ~/gz_ros_ws
+cd ~/ros_ws
 source /opt/ros/jazzy/setup.bash
 export GZ_VERSION=harmonic
 
@@ -72,22 +77,22 @@ CCACHE_DISABLE=1 colcon build --symlink-install \
 source install/setup.bash
 ```
 
-`CCACHE_DISABLE=1` 只用于本机 ccache 目录不可写时的构建规避；正常环境可以省略。
+`CCACHE_DISABLE=1` 只在本机 ccache 目录不可写时使用，正常环境可省略。
 
 ## 示例工程
 
-插件 API 与参数说明见[插件使用](#插件使用)；插件仓库中的示例入口见[示例工程](#示例工程)。
+位于 [`src/livox_lidar_example`](src/livox_lidar_example)，用于验证插件加载、射线命中、动态 TF 和 ROS bridge。它包含：
 
-示例位于 [`src/livox_lidar_example`](src/livox_lidar_example)，包括：
+- 两个圆锥形状示例机器人，分别装有激光雷达；
+- 每个机器人各有一个 model 级 `LivoxLidarSystem` 插件实例；
+- 四面墙壁和地面；
+- `ros_gz_bridge` 桥接 GZ 与 ROS 2 点云 / TF；
+- 可选的 RViz2 点云显示配置；
+- 关闭重力，因此可交互实体不会自行掉落，方便移动物体测试射线效果。
 
-- 两个动态圆锥机器人，底座 frame 为 `base_link_left`、`base_link_right`；
-- 每个机器人顶部一个独立 Livox 实例；
-- 四面可交互墙壁和一个固定地面；
-- 世界级 `UserCommands`，支持 Gazebo GUI Transform Control；
-- ROS 2 bridge、RViz2 双点云显示和动态 TF；
-- 一键脚本 [`run_livox_example.sh`](src/livox_lidar_example/run_livox_example.sh)。
+示例中的 RobotModel 和 mesh 仅用于辅助观察模型位置，不是插件运行条件，也不属于本项目的传感器算法研究范围。只验证点云时，可以关闭 RViz：
 
-启动：
+一键启动：
 
 ```bash
 ./src/livox_lidar_example/run_livox_example.sh
@@ -103,35 +108,26 @@ source install/setup.bash
 | 参数 | 默认值 | 作用 |
 | --- | --- | --- |
 | `rviz` | `true` | 是否启动 RViz2 |
-| `gz_verbosity` | `3` | Gazebo 日志等级，`4` 可显示更详细调试信息 |
+| `gz_verbosity` | `3` | Gazebo 日志等级；`4` 显示更多调试信息 |
 
-示例点云 topic：
-
-```text
-/livox_left/points
-/livox_right/points
-```
-
-对应 TF：
+示例 ROS topic 和 TF：
 
 ```text
+/livox_left/points       # Mid-360点云
+/livox_right/points      # Mid-70点云
 world -> livox_left_frame
 world -> livox_right_frame
 ```
 
-传感器通过 fixed joint 安装在机器人上。拖动机器人模型会带动雷达、射线结果和 RViz 点云；墙壁可以单独拖动。示例关闭重力，动态实体不会自行掉落。
-
 ## 插件使用
 
-双雷达可运行场景和启动方法见[示例工程](#示例工程)。
-
-插件库：
+插件库文件：
 
 ```text
 liblivox_lidar_gz_sensor.so
 ```
 
-加载插件的最小 SDF：
+最小 SDF：
 
 ```xml
 <plugin
@@ -139,95 +135,138 @@ liblivox_lidar_gz_sensor.so
   name="livox_lidar_system::LivoxLidarSystem"/>
 ```
 
-TF 默认使用 system owner 的 scoped topic，例如 `/livox_example_robot_1/tf`。需要自定义时，可在该 system plugin 内传入 `<tf_topic>/my_namespace/tf</tf_topic>`；多个插件实例应使用不同 Gazebo topic。示例 bridge 将各 scoped topic 合并到 ROS 标准 `/tf`，RViz 的 TF 显示显式订阅 `/tf`。
+插件可以挂在 `<model>` 或 `<world>`：
 
-加载工作区后，环境 hook 会设置 `GZ_SIM_SYSTEM_PLUGIN_PATH`。插件必须实际写入 world 或 model 的 `<plugin>`，hook 不会自动实例化插件。
+- model 级插件只处理该 model 及其子实体中的 Livox custom sensor，适合每个机器人独立配置；
+- world 级插件处理整个世界中的 Livox custom sensor，适合统一管理；
+- 同一个 sensor 不要同时被 world 和 model 级插件覆盖，否则会重复创建、射线和发布；
+- hook 只设置 `GZ_SIM_SYSTEM_PLUGIN_PATH` 与 `GZ_SIM_RESOURCE_PATH`，不会自动把 plugin 实例插入 SDF。
 
 ### 型号宏
 
-所有新型号都采用与 Mid-70 相同的公共接口。`link_name` 必填；sensor、frame 和 topic 自动生成。
+所有宏都要求唯一的 `link_name`。sensor、frame 和 point-cloud topic 由它自动派生：
 
-| 型号 | xacro 文件 | link 宏 |
+```text
+sensor name = ${link_name}_sensor
+frame_id    = ${link_name}_frame
+topic       = /${link_name}/points
+```
+
+| 型号 | xacro 文件 | link 宏 | 默认 mesh | 当前状态 |
+| --- | --- | --- | --- | --- |
+| Mid-70 | `urdf/livox_mid70.xacro` | `livox_mid70_link` | `mid70.dae` | 可用于验证 |
+| Mid-360 | `urdf/livox_mid360.xacro` | `livox_mid360_link` | `mid360.dae` | 仅参考，未用实物验证 |
+| Avia | `urdf/livox_avia.xacro` | `livox_avia_link` | `avia.dae` | 仅参考，未用实物验证 |
+| HAP | `urdf/livox_HAP.xacro` | `livox_hap_link` | `HAP.dae` | 仅参考，未用实物验证 |
+| Tele | `urdf/livox_tele.xacro` | `livox_tele_link` | `tele.dae` | 仅参考，未用实物验证 |
+| Horizon | `urdf/livox_horizon.xacro` | `livox_horizon_link` | 无默认 mesh | 官网不再支持，外形 / 质量 / 碰撞 / 点云不保证 |
+| Mid-40 | `urdf/livox_mid40.xacro` | `livox_mid40_link` | 无默认 mesh | 官网不再支持，外形 / 质量 / 碰撞 / 点云不保证 |
+
+
+### 坐标系、pose 和安装孔
+
+xacro 中的传感器坐标以激光雷达点云坐标系为原点：
+
+- `link_pose` 表示承载雷达 link 在父模型中的 pose；`sensor_pose` 默认全零时，link 原点、Gazebo custom sensor 原点和点云坐标系原点重合；
+- 如果把 `sensor_pose` 设为非零，custom sensor / 点云原点就相对 link 移动，TF 也跟随 sensor entity；
+- `mesh_pose` 只移动视觉 mesh，不改变射线坐标、TF 或点云 frame；
+- 真实设备的定位孔、底面和外壳相对点云原点的偏移，需要根据对应型号手册自行设置 `link_pose`、`sensor_pose` 或 `mesh_pose`。
+
+不要把 visual mesh 的几何中心当作点云坐标原点。射线和点云在 `${link_name}_frame` 中发布，插件通过传感器 entity 的 world pose 发布 `world -> ${link_name}_frame`。
+
+### 公共 xacro 参数
+
+| 参数 | 默认 / 类型 | 作用 |
 | --- | --- | --- |
-| HAP | `urdf/livox_HAP.xacro` | `livox_hap_link` |
-| Avia | `urdf/livox_avia.xacro` | `livox_avia_link` |
-| Horizon | `urdf/livox_horizon.xacro` | `livox_horizon_link` |
-| Mid-360 | `urdf/livox_mid360.xacro` | `livox_mid360_link` |
-| Mid-40 | `urdf/livox_mid40.xacro` | `livox_mid40_link` |
-| Mid-70 | `urdf/livox_mid70.xacro` | `livox_mid70_link` |
-| Tele | `urdf/livox_tele.xacro` | `livox_tele_link` |
-
-从旧 xacro 对照并迁移的默认参数：
-
-| 型号 | CSV 点数 / 时间跨度 | CSV 点率 | 频率 | 量程 | 安装偏移 |
-| --- | ---: | ---: | ---: | ---: | --- |
-| HAP | 1,048,575 / 2.3136 s | 约 453 k点/s | 10 Hz | 0.1--200 m | `0 0 1.6` |
-| Avia | 960,000 / 4 s | 240 k点/s | 10 Hz | 0.1--200 m | `0 0 0` |
-| Horizon | 960,000 / 4 s | 240 k点/s | 10 Hz | 0.1--200 m | `0 0 0` |
-| Mid-360 | 800,000 / 4 s | 200 k点/s | 10 Hz | 0.1--200 m | `0 1.0 0.2` |
-| Mid-40 | 400,000 / 4 s | 100 k点/s | 10 Hz | 0.1--200 m | `0 0 0` |
-| Mid-70 | 400,000 / 4 s | 100 k点/s | 10 Hz | 0.1--200 m | `0 0 0` |
-| Tele | 960,000 / 4 s | 240 k点/s | 10 Hz | 0.1--200 m | `0 0 0` |
-
-表中是旧 xacro 的迁移值。Mid-70 宏仍采用项目既有默认值 20 Hz / 0.1--70 m；如需与旧项目一致，在调用时传入 `update_rate="10"`、`range_max="200"`。CSV 点率与消息频率独立，例如 Mid-360 在 10 Hz 下每帧约 20,000 条射线。
+| `link_name` | 必填字符串 | link、sensor、frame 和 topic 的命名根，必须全局唯一 |
+| `link_pose` | `x y z roll pitch yaw` | 点云 link 原点在父模型中的 pose |
+| `sensor_pose` | `x y z roll pitch yaw` | custom sensor 在 link 中的 pose |
+| `mesh_file` | 型号默认路径或空字符串 | Gazebo visual mesh |
+| `mesh_scale` | `1 1 1` | Gazebo mesh 缩放 |
+| `mesh_pose` | 零 pose | Gazebo visual mesh 相对 link 的偏移 |
+| `scan_file` | 型号 CSV | `Time/s,Azimuth/deg,Zenith/deg` 扫描轨迹 |
+| `update_rate` | Hz | 点云扫描发布频率 |
+| `range_min` / `range_max` | 米 | 射线起止距离 |
+| `downsample` | 正整数 | 降采样，若设置为2，则每秒20万点的雷达实际计算10万点 |
+| `noise_mean` / `noise_stddev` | 米 | 沿射线方向的高斯距离噪声 |
 
 调用示例：
 
 ```xml
-<xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_avia.xacro"/>
+<xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid70.xacro"/>
 
-<xacro:livox_avia_link
-  link_name="front_avia"
-  link_pose="0 0 1.0 0 0 0"
-  update_rate="10"
+<xacro:livox_mid70_link
+  link_name="front_mid70"
+  link_pose="0.25 0 1.20 0 0 0"
+  update_rate="20"
+  range_min="0.1"
+  range_max="70.0"
   downsample="2"
   noise_stddev="0.01"/>
 ```
 
-自动生成：
+### 同时配置不同雷达
 
-```text
-sensor name = front_avia_sensor
-frame_id    = front_avia_frame
-topic       = /front_avia/points
+在同一个 model 中 include 多个型号文件，调用多个 link 宏即可。每个 `link_name` 必须不同，固定 joint 的 child 也必须不同；System plugin 只需要一个：
+
+```xml
+<xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_mid70.xacro"/>
+<xacro:include filename="$(find livox_lidar_gz_sensor)/urdf/livox_avia.xacro"/>
+
+<xacro:livox_mid70_link
+  link_name="robot1_top_mid70"
+  link_pose="0 0 1.0 0 0 0"/>
+<xacro:livox_avia_link
+  link_name="robot1_front_avia"
+  link_pose="0.3 0 0.8 0 0 0"/>
+
+<joint name="robot1_top_mid70_joint" type="fixed">
+  <parent>base_link</parent>
+  <child>robot1_top_mid70</child>
+</joint>
+<joint name="robot1_front_avia_joint" type="fixed">
+  <parent>base_link</parent>
+  <child>robot1_front_avia</child>
+</joint>
+
+<plugin
+  filename="liblivox_lidar_gz_sensor.so"
+  name="livox_lidar_system::LivoxLidarSystem"/>
 ```
 
-### 公共参数
+多个机器人时给命名根加机器人前缀，例如 `robot1_top_mid70`、`robot2_top_mid70`。不要让不同机器人复用同一个 `link_name`，否则点云 topic 和 TF frame 会冲突。多个 model 级插件实例可以共存；world 级插件则可统一处理所有机器人，但不要再对同一 model 重复挂载。
 
-| 参数 | 默认/类型 | 作用 |
-| --- | --- | --- |
-| `link_name` | 必填字符串 | link、sensor、frame、topic 的命名根 |
-| `link_pose` | `x y z roll pitch yaw` | 传感器 link 在父模型中的位姿 |
-| `sensor_pose` | `x y z roll pitch yaw` | custom sensor 在 link 中的位姿 |
-| `mesh_file` | 型号 mesh 路径 | visual mesh URI |
-| `mesh_scale` | `1 1 1` | mesh 缩放 |
-| `mesh_pose` | 零位姿 | mesh visual 相对 link 的位姿 |
-| `scan_file` | 型号 CSV | 扫描时间、方位角、天顶角 |
-| `update_rate` | Hz | 扫描窗口发布频率 |
-| `range_min` / `range_max` | 米 | 射线起止距离 |
-| `downsample` | 正整数 | 保留 CSV 的第 `0、N、2N...` 行 |
-| `noise_mean` / `noise_stddev` | 米 | 沿射线方向的高斯距离噪声 |
+### Gazebo mesh 与 RViz 点云显示边界
 
-配置文件不再接收 `sensor_name` 或 `frame_id` 参数。`link_name` 必须在同一 Gazebo transport 域内全局唯一，因为点云 topic 和 TF frame 均由它派生；多机器人可用 `robot1_livox_front`、`robot2_livox_front` 这样的名称。
+本项目主要实现传感器插件、CSV 扫描轨迹、射线查询和点云发布。Gazebo SDF / xacro 中的 `mesh_file` 只控制传感器 link 的可选视觉几何，不参与 CSV 扫描、射线生成、物理命中或点云打包。Gazebo 使用 `<geometry><mesh><uri>...</uri><scale>...</scale></mesh></geometry>`，本项目默认通过 `$(find livox_lidar_gz_sensor)/meshes/*.dae` 展开，并由 Gazebo 资源路径解析。
+
+RViz 可以只订阅桥接后的 `sensor_msgs/msg/PointCloud2`，不需要 `robot_state_publisher`、RobotModel 或任何雷达 mesh。将 PointCloud2 display 的 topic 设为对应的 `/${link_name}/points`；纯点云检查时可直接把 Fixed Frame 设为 `${link_name}_frame`，需要放到 `world` / `map` 中显示时才配置相应 TF。点云的 `frame_id` 由插件配置为 `${link_name}_frame`。因此，RViz 只显示纯点云即可验证插件输出。
+
+示例提供 `src/livox_lidar_example/urdf/livox_display.urdf.xacro` 和 RobotModel 配置，只是可选的外部辅助显示。它使用 URDF 的 `package://...` mesh URI，由 `robot_state_publisher` 和 RViz 解析；该模型不会改变 Gazebo 中的 link、传感器 pose 或点云坐标。Gazebo mesh 与 RViz mesh 的位置、缩放、坐标原点及同步关系不属于本项目的研究和保证范围，应由使用者在自己的模型中单独校准。
+
+Gazebo 当前示例主要使用 COLLADA `.dae`，RViz 的具体 mesh 格式取决于其渲染器和 URDF 解析链路；mesh 无法显示时分别检查 Gazebo 资源路径或 ROS package share 路径。mesh 显示失败不会影响插件发布点云。
 
 # 开发部分
 
 ## Sensor 与 System 分工
 
-`LivoxLidarSystem` 是挂在 model 或 world 层的 Gazebo Sim system：
+`LivoxLidarSystem` 是 Gazebo Sim system：
 
-- `Configure`：保存 owner entity，创建 Gazebo TF publisher；
-- `PreUpdate`：发现 owner 下的 `CustomSensor`，创建 `LivoxLidarSensor`，提交 `RaycastData`；
-- `PostUpdate`：读取物理射线结果，更新 sensor，发布点云和 `world -> frame_id` TF。
+- `Configure` 保存 owner entity，并创建 owner-scoped TF publisher；
+- `PreUpdate` 用 `EachNew<CustomSensor, ParentEntity>` 发现自己 owner 下的新 sensor；
+- 对 `gz:type` 以 `livox_` 开头的 sensor 创建 `LivoxLidarSensor`；
+- 生成当前扫描窗口的射线，写入该 sensor entity 的 `components::RaycastData`；
+- `PostUpdate` 读取物理命中结果，把结果交给 Sensor，发布点云和 `world -> frame_id` TF；
+- `EachRemoved` 清理被删除 sensor 的扫描时间、raycast 和实例状态。
 
 `LivoxLidarSensor` 继承 `gz::sensors::Sensor`：
 
-- `Load` 读取 `gz:livox_config`、CSV、量程、降采样和噪声；
-- `GenerateRays` 用 CSV 时间窗口生成传感器坐标系射线；
-- `Update` 将命中结果打包为 `gz.msgs.PointCloudPacked`；
-- topic、frame 和消息序号在 Sensor 内维护。
+- `Load` 解析 `gz:livox_config`、CSV、量程、降采样和噪声；
+- `GenerateRays` 根据 CSV 时间窗口生成传感器坐标系的射线；
+- `Update` 将命中点打包为 `gz.msgs.PointCloudPacked` 并发布；
+- Gazebo 的 `update_rate` 决定窗口周期，CSV 的时间跨度和点率决定每个窗口包含多少条射线。
 
-## 运行流程
+运行流程：
 
 ```text
 SDF / xacro
@@ -237,89 +276,44 @@ SDF / xacro
   -> components::RaycastData
   -> Gazebo Physics / Bullet
   -> LivoxLidarSystem::PostUpdate
-  -> PointCloudPacked + owner-scoped TF topic
+  -> PointCloudPacked + owner-scoped TF
   -> ros_gz_bridge
   -> PointCloud2 + /tf
-  -> RViz2
+  -> 可选的 RViz2 PointCloud2 display
 ```
 
-射线与命中点保持在 sensor frame。不要在发布前再次套用 world 到 sensor 的逆变换，否则会出现重复变换。插件直接使用传感器 entity 的 world pose 发布与点云相同的 `frame_id`，不需要额外创建同名空 link。
+命中点和点云保持在 sensor frame。不要在发布前再次套用 world 到 sensor 的逆变换，否则会重复变换。
 
-## 代码与资源约定
+## 约定和限制
 
-- 新型号配置应复制 Mid-70 的 link/sensor 结构，只替换型号、CSV、mesh 和已确认的安装偏移。
-- `gz:type` 使用 `livox_<model>`，System 通过 `livox_` 前缀发现，不需要为每个型号新增一套 system 类。
-- CSV 必须是三列：`Time/s,Azimuth/deg,Zenith/deg`，时间非递减；HAP 数据有重复时间戳，重复项作为同一时刻的多束射线保留。
-- 真正 mesh 替换时，保持 xacro 参数中的 mesh URI 与 `GZ_SIM_RESOURCE_PATH` 可解析。
-- ROS bridge 的每个点云 topic 必须与 SDF `<topic>` 完全一致。
+- `gz:type` 使用 `livox_<model>`，System 通过前缀发现，不需要为每个型号新增 System 类；
+- CSV 必须为三列，时间非递减；HAP 的重复时间戳会作为同一时刻的多束射线保留；
+- 当前 `intensity` 固定为 `1.0`，没有材质反射率模型；
+- 多回波、不同扫描模式、IMU、厂商数据包协议、回波强度和其他设备专有功能均未模拟；
+- 当前扫描逻辑使用 CSV 轨迹和周期窗口，不等价于实际设备的全部时序、回波和内部调度；
+- 当前每个 physics step 最多提交一个完整扫描窗口；如果仿真时间一次跨过多个 `update_rate` 周期，积压窗口会在后续 physics step 逐个追赶，可能短时连续发布；应避免仿真步长或暂停恢复跨度大于扫描周期；
+- 射线查询目前不根据点云订阅者数量短路，多个高点率雷达会带来明显 CPU / Physics 开销；应通过 `downsample`、`update_rate` 和数量控制性能；
+- 旧项目中的 `visualize`、规则 ray FOV、角分辨率、`samples`、`resolution` 等字段没有伪造迁移；
+- 当前已验证的点云消息为 `gz.msgs.PointCloudPacked`，ROS 2 输出依赖 `ros_gz_bridge`，插件本身不直接依赖 ROS 2 消息库。
 
-## 构建与验证
-
-插件构建：
+## 构建和检查
 
 ```bash
 source /opt/ros/jazzy/setup.bash
 export GZ_VERSION=harmonic
-CCACHE_DISABLE=1 colcon build --symlink-install \
-  --packages-select livox_lidar_gz_sensor
-```
+CCACHE_DISABLE=1 colcon build --symlink-install
+source install/setup.bash
 
-建议的静态检查：
+# XML / xacro
+xmllint --noout src/livox_lidar_gz_sensor/urdf/livox_mid70.xacro
+xacro src/livox_lidar_example/worlds/livox_example.world.xacro \
+  -o /tmp/livox_example.sdf
+gz sdf -k /tmp/livox_example.sdf
 
-```bash
-xmllint --noout src/livox_lidar_gz_sensor/urdf/livox_avia.xacro
-gz sdf -k <expanded_world.sdf>
-gz plugin -i -p install/livox_lidar_gz_sensor/lib/liblivox_lidar_gz_sensor.so
-```
+# 插件接口
+gz plugin -i -p \
+  install/livox_lidar_gz_sensor/lib/liblivox_lidar_gz_sensor.so
 
-运行检查：
-
-```bash
+# 运行数据
 gz topic -e -t /livox_example_robot_1/tf
-gz topic -e -t /front_avia/points
-ros2 topic echo /front_avia/points --once
-```
-
-## 兼容性与限制
-
-- 旧配置中的 `visualize`、规则 ray FOV、角分辨率、`samples`、`resolution` 没有迁移到当前 custom sensor；当前实现使用 CSV 真实扫描轨迹。
-- 当前 `intensity` 字段固定为 `1.0`，尚未依据目标材质或 Livox 反射率模型计算；CSV 也不包含反射率数据。
-- Mid-360 CSV 原始时间序号已全部除以 200000，800,000 行时间范围为 5 us 至 4 s；插件载入时归一化为 0 至 3.999995 s，并以 4 s 为周期。帧窗口采用 `[start, end)`，边界点只属于一帧。
-- 各型号 CSV 点率已核对：HAP 约 453 k点/s（含重复时间戳），Avia/Horizon/Tele 240 k点/s，Mid-360 200 k点/s，Mid-40/Mid-70 100 k点/s。
-- `meshes/` 下的模型来自 Livox 官方下载，并经过手动坐标平移；其独立再分发许可尚未核验。
-- 点云发布使用 `gz.msgs.PointCloudPacked`，ROS 2 输出依赖 `ros_gz_bridge`，插件本身不直接依赖 ROS 2 消息库。
-- TF topic 按 system owner 隔离，例如 `/livox_example_robot_1/tf`；示例 bridge 合并到 ROS `/tf`。
-
-## 开源许可证
-
-最终采用文件范围明确的混合许可证策略：
-
-| 文件范围 | 许可证 | 版权与来源 |
-| --- | --- | --- |
-| 本仓库原创插件、示例、xacro、launch、构建配置和文档 | Apache-2.0 | `SPDX-License-Identifier: Apache-2.0`；版权 `FZ_XiaoXi`，2026 |
-| 上游扫描 CSV 与修改过的 CSV | MIT | 上游版权 `livox`，2021；清单及完整许可文本见 [`NOTICE`](NOTICE) |
-| `include/csv_reader.hpp` | MIT | 保留 `livox` 上游版权，并标注 `FZ_XiaoXi` 修改；见文件 SPDX 头与 [`NOTICE`](NOTICE) |
-| `meshes/*.dae` | 未确定 | 属于单独下载的第三方模型，不由本仓库 Apache-2.0 授权 |
-
-根目录 [`LICENSE`](LICENSE) 是原创代码的 Apache-2.0 正文；它不会把 MIT 文件或第三方 mesh 转授权为 Apache-2.0。插件包 manifest 同时列出 `Apache-2.0` 与 `MIT`，表示包内存在这两类文件；文件级范围以 SPDX 头和 `NOTICE` 为准。Example 包和其原创文件使用 Apache-2.0。
-
-`scan_mode/mid360.csv` 的时间列经过转换，但数据来源仍是上游，继续保留 MIT 条件。`meshes/` 的下载来源已在 `NOTICE` 记录，但独立再分发许可与商标条件尚未核验；获得权利依据前，不应将 mesh 纳入公开二进制或资源包发布。
-
-发布前许可证待办：
-
-- [x] 将上游 MIT 版权与许可声明放入根目录第三方声明，并标注受影响文件；
-- [ ] 确认官方 mesh 和 Livox 商标/型号资料的分发权限；
-- [x] 统一原创文件 SPDX 头、插件和 example manifest 的许可证字段及文件级发布策略；
-- [ ] 补充各第三方依赖的许可证清单和版本；
-- [ ] 发布前由项目维护者或法律顾问复核 NOTICE、版权头和再分发义务。
-- [ ] 为 `intensity` 实现有依据的反射率输出；当前值固定为 `1.0`。
-
-以上是基于当前工作区文件的工程审查，不构成法律意见。
-
-## 外部链接占位符
-
-- 项目主页：`https://example.invalid/PROJECT_URL`
-- 上游 Livox 项目：`https://github.com/Livox-SDK/livox_laser_simulation`
-- Gazebo Sim system plugin 文档：`https://example.invalid/GAZEBO_SYSTEM_PLUGIN_DOC_URL`
-- ROS 2 Jazzy 文档：`https://example.invalid/ROS2_JAZZY_DOC_URL`
-- Gazebo Harmonic 文档：`https://example.invalid/GAZEBO_HARMONIC_DOC_URL`
+ros2 topic echo /livox_left/points --once

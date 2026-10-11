@@ -38,6 +38,12 @@ install(
 )
 
 install(
+  DIRECTORY
+    urdf
+  DESTINATION share/${PROJECT_NAME}
+)
+
+install(
   PROGRAMS
     run_livox_example.sh
   DESTINATION share/${PROJECT_NAME}

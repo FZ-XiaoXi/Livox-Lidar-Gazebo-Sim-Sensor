@@ -16,7 +16,7 @@
       range_max:=200.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <sensor
       name="${link_name}_sensor"
@@ -48,7 +48,7 @@
       link_name
       link_pose:='0 0 0 0 0 0'
       sensor_pose:='0 0 0 0 0 0'
-      mesh_file:='$(find livox_lidar_gz_sensor)/meshes/mid40.dae'
+      mesh_file:=''
       mesh_scale:='1 1 1'
       mesh_pose:='0 0 0 0 0 0'
       scan_file:='$(find livox_lidar_gz_sensor)/scan_mode/mid40.csv'
@@ -57,10 +57,11 @@
       range_max:=200.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <link name="${link_name}">
       <pose>${link_pose}</pose>
+      <!-- Placeholder dynamics only; Mid-40 mass and inertia are unverified. -->
       <inertial>
         <mass>0.1</mass>
         <inertia>
@@ -81,16 +82,7 @@
           </geometry>
         </visual>
       </xacro:if>
-      <xacro:if value="${mesh_file == ''}">
-        <visual name="${link_name}_visual_placeholder">
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </visual>
-      </xacro:if>
-
+      <!-- Placeholder collision only; dimensions and point-cloud behavior are unverified. -->
       <collision name="${link_name}_collision">
         <geometry>
           <box>

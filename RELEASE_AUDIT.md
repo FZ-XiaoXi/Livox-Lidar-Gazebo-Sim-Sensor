@@ -11,7 +11,7 @@
 
 ## 结论
 
-代码可以在当前环境完成构建，示例 SDF 和七种型号 xacro 可以展开，插件能够加载两个不同型号实例并发布点云与 TF。Mid-360 周期回归已经完成；发布前仍有许可证清理、仓库边界处理和自动化测试待办：
+代码可以在当前环境完成构建，示例 SDF 和七种型号 xacro 可以展开，插件能够加载两个不同型号实例并发布点云与 TF。Mid-360 周期回归已经完成；发布前仍有 mesh 许可核验和自动化测试待办：
 
 1. 原创代码的 Apache-2.0 策略、上游 MIT 文件范围和 SPDX/manifest 标识已统一；官方 mesh 的独立再分发许可仍待核验。
 2. 当前没有自动化单元测试；本次验证使用构建、xacro/SDF、插件加载和 Gazebo server smoke test。
@@ -27,7 +27,11 @@
 - 统一原创源码与配置的 `SPDX-FileCopyrightText: 2026 FZ_XiaoXi` / `SPDX-License-Identifier: Apache-2.0` 头；上游 CSV reader 保留 `livox` MIT 并注明本项目修改。
 - 根 LICENSE、NOTICE、插件与 example manifest、README 均采用同一文件级许可证策略；mesh 明确排除于根级 Apache-2.0 授权之外。
 - 修正示例动态墙的惯性张量，使其与 wall box 尺寸和质量一致。
+- Mid-70、Mid-360、Avia、HAP 和 Tele 均使用 `<inertial auto="true">`；碰撞包络与质量分别按 x/y/z 轴设置为 97 x 64 x 62.7 mm / 0.580 kg、65 x 65 x 60 mm / 0.265 kg、91 x 61.2 x 64.8 mm / 0.498 kg、105 x 131.6 x 65 mm / 1.120 kg、122 x 112 x 94.2 mm / 1.800 kg。碰撞密度按包络体积设定，以匹配当前 SDFormat 的自动惯量展开质量。
 - 统一 HAP、Avia、Horizon、Mid-360、Mid-40、Mid-70、Tele 的 xacro 接口：`link_name` 派生 sensor 名、frame 和 topic。
+- Horizon 和 Mid-40 默认不再引用历史 DAE mesh，并在 xacro 中明确标注其外形、质量、碰撞和点云参数未经保证。
+- 根 README 补充点云坐标原点、官方安装孔偏移、多雷达命名、Gazebo / RViz mesh URI 差异和未模拟功能说明。
+- 统一示例左侧为 Mid-360、右侧为 Mid-70；示例传感器原点抬离圆锥碰撞体并关闭距离噪声，避免自碰撞点和随机距离扰动掩盖地面射线验证。
 - 删除 xacro 中无物理意义的同名空 frame link；TF 由 system 根据 sensor entity 的 world pose 发布，避免引入无质量固定 link。
 - 删除源码树下所有子目录 README，内容集中到根目录 [`README.md`](README.md)。
 
@@ -37,7 +41,7 @@
 
 当前 TF 和 topic 约定是一致的：对 `link_name=front_avia`，sensor 名为 `front_avia_sensor`，点云 `frame_id=front_avia_frame`，topic 为 `/front_avia/points`，插件 TF 为 `world -> front_avia_frame`。model 级 system 的默认 Gazebo TF topic 为 `/model_name/tf`；示例 bridge 将多个 scoped topic 合并到 ROS `/tf`。多个 sensor 可以共享一个 system 实例；多个 model 级 system 实例也会按 owner 过滤实体。
 
-射线和命中点保持在 sensor frame，避免二次变换。物理射线通过 `SetComponentData<components::RaycastData>` 更新，满足 Gazebo Sim 8 物理系统对组件变更的要求。
+射线和命中点保持在 sensor frame，避免二次变换。物理射线通过 `SetComponentData<components::RaycastData>` 更新，满足 Gazebo Sim 8 物理系统对组件变更的要求。发布前会按 `fraction` 和本地射线起止点重建命中点，避免后端点坐标与射线坐标系不一致时产生飞点。
 
 ## 型号审查
 
@@ -45,7 +49,7 @@
 
 Mid-360 原始时间列为 `1..800000`，已按 200000 点/秒缩放到约 `0.000005..4` 秒，使单位与插件一致。Gazebo 实测 `update_rate=10` 时每个 `[0.1s)` 窗口为 20,000 条射线，完整运行跨过 `[3.9, 4.0)` 后继续输出 `[4.0, 4.1)`，回绕没有重复或漏点；CSV 静态检查覆盖完整 4 秒和 800,000 行。
 
-当前各型号 mesh 根据维护者说明来自 Livox 官方下载并经过手动坐标平移；它们不能在许可证确认前视为可自由再分发资产，也不能作为真实外观和尺寸的验证依据。
+HAP、Avia、Mid-360、Mid-40、Horizon 和 Tele 的历史 DAE 占位文件中有部分内容相同，Mid-70 DAE 内容不同；Horizon 和 Mid-40 xacro 已不再默认引用这些文件。各型号外观、尺寸和授权都未逐一核实，因此这些网格不能作为型号真实性依据。
 
 ## 验证记录
 
@@ -53,13 +57,20 @@ Mid-360 原始时间列为 `1..800000`，已按 200000 点/秒缩放到约 `0.00
 
 - `CCACHE_DISABLE=1 colcon build --symlink-install`，工作区两个包构建成功；
 - 所有型号 xacro XML 语法检查；
-- 六个新增型号与 Mid-70 共七种 xacro 文件解析，且示例 world 展开成功；
+- 六个新增型号与 Mid-70 共七种 xacro 文件解析，且示例 world 展开成功；Horizon / Mid-40 的默认 mesh URI 为空；
 - `gz sdf -k` SDF 合法性检查；
+- `gz sdf -p --expand-auto-inertials` 检查五款型号展开后的惯量，质量分别约为 0.580、0.265、0.498、1.120、1.800 kg，碰撞 box 尺寸与 xacro 设置一致；
 - 生成 SDF 中 sensor 名、`gz:type`、CSV、mesh、frame 和 topic 一一对应；
-- Gazebo server smoke test：`UserCommands` 服务创建，两个 Livox sensor 成功加载，射线结果和点云持续发布；
+- 既有 Gazebo server smoke test：`UserCommands` 服务创建，两个 Livox sensor 成功加载，射线结果和点云持续发布；
 - owner-scoped TF 消息检查，确认 `/livox_example_robot_1/tf`、`/livox_example_robot_2/tf` 存在，且 `frame_id=world`、`child_frame_id=livox_left_frame/livox_right_frame`；
-- 10 秒 server-only Gazebo 回归，确认 Mid-360 连续输出 20,000 rays / 0.1 s，Horizon 连续输出 24,000 rays / 0.1 s，并无插件错误；
+- 既有 10 秒 server-only Gazebo 回归，确认 Mid-360 连续输出 20,000 rays / 0.1 s，Tele 连续输出 24,000 rays / 0.1 s，并无插件错误；
 - `git diff --check` 和 launch Python 语法检查。
+- 根 README 已逐项对照 xacro 默认值、示例 world 中的 Tele / Mid-70 实例、launch 参数、bridge topic、RViz fixed frame 和 SPDX/NOTICE 范围；README 与 NOTICE 已按 mesh 来源、坐标处理和许可未核验状态说明。
+- RViz RobotModel 已通过两个 `robot_state_publisher` 描述 topic 接入；模型根分别为 `livox_left_frame` / `livox_right_frame`，由插件动态 TF 驱动，底座使用带 SPDX 的示例圆锥 OBJ。
+- 本次最后整理：Horizon / Mid-40 默认 `mesh_file` 为空；示例 RViz 的左侧 mesh 已与 Gazebo Tele 型号一致；C++ 使用根目录 `.clang-format`；示例 OBJ 从通用 `*.obj` 忽略规则中显式纳入版本控制。
+- 本次验证：全工作区 `colcon build --symlink-install`、七个型号 xacro 展开、example world xacro 展开与 `gz sdf -k`、RViz URDF xacro 展开、`gz plugin -i`、`clang-format --dry-run --Werror`、launch Python 语法检查、`git diff --check` 均通过。
+- `colcon test` 返回成功，但当前两个包没有注册测试，`colcon test-result --verbose` 为 `0 tests`；这不是功能覆盖证明。
+- 本次未能重跑 Gazebo server：沙箱中 Gazebo 无法创建 `/home/seaber/.gz/auto_default.log` 和 server log，并报告 `getifaddrs: Unknown error -1`；因此本轮只把已有 smoke test 记录作为历史验证，不将其表述为本轮复验结果。
 
 未覆盖：
 
@@ -76,7 +87,9 @@ Mid-360 原始时间列为 `1..800000`，已按 200000 点/秒缩放到约 `0.00
 | 中 | 点云 `intensity` 固定写成 `1.0` | 不表达材质反射率或真实 Livox intensity；当前文档已明确限制 |
 | 中 | `frame_id` 与点云 topic 只根据 `link_name` 派生 | 多机器人使用同名传感器会产生 topic/frame 冲突；README 要求同一 transport 域内全局唯一 |
 | 中 | 没有提交的自动化测试，运行回归目前依赖人工 Gazebo smoke test | 加入 CSV、窗口端点、实体删除和多实例测试后再做发布候选 |
-| 中 | 除 Mid-70 外各型号 mesh 是 Mid-70 模型副本 | 仅能验证资源安装和渲染，不代表真实尺寸、外观或碰撞外形 |
+| 高 | 多个型号 mesh 是临时或未经逐型号核验的下载资产，Mid-70 mesh 也未完成独立授权核验 | 仅能验证资源安装与渲染；许可核验前不应作为公开发布资源 |
+| 中 | 仿真时间一次跨过多个扫描周期时，每个 physics step 只提交一个窗口 | 当前示例的 1 ms physics step 小于扫描周期；积压窗口会逐步追赶，可能短时连续发布，需增加 backlog 回归 |
+| 中 | 即使没有点云订阅者，System 仍会生成和提交射线 | 多个高点率 sensor 会消耗 Physics / CPU；可在后续版本按连接状态短路或提供显式禁用参数 |
 
 修复的代码问题：射线窗口原先实现为 `(start, end]`，与注释目标相反；现已改为 `[start, end)`。噪声标准差为零时不再构造非法的零方差正态分布。HAP 的重复时间戳由非递减 CSV 校验保留；空 frame link、未使用的 `model` 配置和 ray normal 缓存已移除。
 
@@ -85,7 +98,7 @@ Mid-360 原始时间列为 `1..800000`，已按 200000 点/秒缩放到约 `0.00
 - [x] 完成 Mid-360 时间换算、4 秒静态周期和 Gazebo 窗口边界回归；
 - [ ] 为 owner-scoped TF topic 增加多 world 运行回归；
 - [ ] 增加自动化测试：CSV 校验、射线窗口边界、实体删除、多 sensor topic/TF 唯一性；
-- [ ] 确认官方坐标平移 mesh 和 Livox 商标/型号资料的再分发权限；
+- [ ] 用已验证且获准分发的各型号 mesh 替换占位资产，并确认 Livox 商标/型号资料的再分发权限；
 - [x] 为仓库补充根级 Apache-2.0 LICENSE 和包含上游 MIT 全文的 NOTICE；
 - [x] 在 NOTICE 中明确上游 MIT 范围为 `scan_mode/*.csv` 与 `include/csv_reader.hpp`；
 - [x] 统一原创代码 SPDX 版权头、包 manifest 许可证字段和文件级发布策略；
@@ -99,7 +112,7 @@ Mid-360 原始时间列为 `1..800000`，已按 200000 点/秒缩放到约 `0.00
 - `livox_lidar_gz_sensor/package.xml` 声明包内 Apache-2.0 与 MIT 文件，`livox_lidar_example/package.xml` 声明 Apache-2.0；
 - 原创 C++、头文件、xacro、launch、CMake 与 example 配置带 Apache-2.0 SPDX 标识；`csv_reader.hpp` 带 MIT SPDX 标识与双版权归属；CSV 的范围由 NOTICE 列出；
 - 根目录 `LICENSE` 是 Apache License 2.0；根目录 `NOTICE` 完整保留上游 MIT 声明，并限定到 `scan_mode/*.csv` 与 `include/csv_reader.hpp`。
-- 根据维护者说明，`meshes/` 来自 Livox 官方下载并经过手动坐标平移；mesh 不纳入上游 MIT 清单，其独立许可待核验。
+- `meshes/` 中保留了多个下载并手动平移坐标的 DAE；Horizon / Mid-40 xacro 默认不引用历史占位文件。mesh 不纳入上游 MIT 清单，其来源、型号准确性和独立许可待核验。
 
 因此按文件范围识别混合许可：Apache-2.0 是本仓库原创代码的默认许可证，MIT 只适用于 NOTICE 和 SPDX 标识的上游文件；不得把 package manifest 的多许可证列表解释成包内每个文件都双重许可。mesh 属于单独下载并修改坐标的第三方资产，仍需核验再分发权。发布前应由项目维护者确认 mesh 权利和 Livox 商标范围，必要时让法律顾问复核。
 

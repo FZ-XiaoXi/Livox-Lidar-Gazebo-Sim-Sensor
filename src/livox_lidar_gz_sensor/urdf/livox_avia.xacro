@@ -16,7 +16,7 @@
       range_max:=200.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <sensor
       name="${link_name}_sensor"
@@ -57,17 +57,13 @@
       range_max:=200.0
       downsample:=1
       noise_mean:=0.0
-      noise_stddev:=0.01">
+      noise_stddev:=0.0">
 
     <link name="${link_name}">
       <pose>${link_pose}</pose>
-      <inertial>
-        <mass>0.1</mass>
-        <inertia>
-          <ixx>0.000166667</ixx>
-          <iyy>0.000166667</iyy>
-          <izz>0.000166667</izz>
-        </inertia>
+      <!-- Body envelope (x/y/z): 91 x 61.2 x 64.8 mm; mass: 498 g. -->
+      <inertial auto="true">
+        <mass>0.498</mass>
       </inertial>
 
       <xacro:if value="${mesh_file != ''}">
@@ -92,9 +88,10 @@
       </xacro:if>
 
       <collision name="${link_name}_collision">
+        <density>1379.944190</density>
         <geometry>
           <box>
-            <size>0.1 0.1 0.1</size>
+            <size>0.091 0.0612 0.0648</size>
           </box>
         </geometry>
       </collision>

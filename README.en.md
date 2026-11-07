@@ -243,6 +243,10 @@ This project focuses on the sensor plugin, CSV scan trajectories, ray queries, a
 
 RViz can display the bridged `sensor_msgs/msg/PointCloud2` without `robot_state_publisher`, RobotModel, or any lidar mesh. Set the PointCloud2 display topic to `/${link_name}/points`. For point-cloud-only inspection, set Fixed Frame to `${link_name}_frame`; to display it in `world` or `map`, configure the required TF. The plugin sets the cloud `frame_id` to `${link_name}_frame`, so a RobotModel is not required to validate point-cloud output.
 
+The plugin publishes a `PointCloudPacked` layout matching native Livox `PointXYZRTL`: `x`, `y`, and `z` are `float32`, `intensity` is `float32`, `tag` and `line` are `uint8`, and `point_step` is 18 bytes. `tag` and `line` are both always 0; line numbers are not inferred from CSV order. `intensity` is a 0 to 255 reflectivity computed from the ray direction and hit-surface normal: `clamp(round(255 * abs(dot(normalize(hit_normal), -normalize(ray_end - ray_start)))), 0, 255)`. Invalid rays or normals produce 0 while retaining the hit point.
+
+To inspect reflectivity in RViz, set the PointCloud2 display topic, Fixed Frame to `${link_name}_frame`, Color Transformer to `Intensity`, and the intensity range to `0` through `255`; enable Rainbow coloring. Points with different incidence angles should use different colors.
+
 The example's `src/livox_lidar_example/urdf/livox_display.urdf.xacro` and RobotModel configuration are optional visualization helpers. They use URDF `package://...` mesh URIs resolved by `robot_state_publisher` and RViz. They do not change the Gazebo link, sensor pose, or point-cloud coordinates. Mesh placement, scale, coordinate origin, and synchronization between Gazebo and RViz are not calibrated or guaranteed by this project; users should validate these independently for their models.
 
 The current Gazebo example primarily uses COLLADA `.dae` files. RViz mesh support depends on its renderer and URDF parsing chain. If a mesh does not display, check the Gazebo resource path or the ROS package share path as appropriate. A mesh-loading failure does not prevent the plugin from publishing point clouds.
@@ -289,7 +293,7 @@ Ray hits and point clouds remain in the sensor frame. Do not apply another inver
 
 - `gz:type` uses `livox_<model>`. The System discovers supported custom sensors by prefix, so a new model does not require a new System class.
 - CSV files must have three columns and non-decreasing timestamps. Duplicate HAP timestamps are preserved as multiple rays at the same time.
-- `intensity` is fixed at `1.0`; no material reflectivity model is implemented.
+- All `livox_*` models share the incidence-angle reflectivity model. Material colors or reflectance coefficients, distance attenuation, and multiple returns are not simulated.
 - Multiple returns, alternative scan modes, IMU data, vendor packet protocols, return intensity, and other device-specific features are not simulated.
 - The current scan logic follows CSV trajectories and periodic time windows; it does not reproduce all real-device timing, returns, or internal scheduling.
 - At most one complete scan window is submitted per physics step. If simulation time advances across multiple `update_rate` periods in one step, queued windows are processed in later physics steps and may publish back-to-back. Avoid simulation steps or pause/resume jumps longer than the scan period.

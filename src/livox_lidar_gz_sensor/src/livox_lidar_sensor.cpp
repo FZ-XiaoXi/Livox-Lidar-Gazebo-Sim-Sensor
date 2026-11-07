@@ -176,7 +176,11 @@ bool LivoxLidarSensor::Load(const sdf::Sensor& _sdf) {
 bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration& _now) {
   if (!this->pointCloudPub_) return false;
 
-  std::vector<gz::math::Vector3d> outputPoints;
+  struct OutputPoint {
+    gz::math::Vector3d point;
+    float reflectivity{0.0F};
+  };
+  std::vector<OutputPoint> outputPoints;
   outputPoints.reserve(this->raycastResults_.size());
   const bool applyNoise = this->noiseStdDev_ > 0.0 || this->noiseMean_ != 0.0;
   std::normal_distribution<double> noiseDistribution;
@@ -186,34 +190,53 @@ bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration& _now) {
   for (const auto& result : this->raycastResults_) {
     const auto ray = result.rayEnd - result.rayStart;
     const double rayLength = ray.Length();
-    if (std::isfinite(result.fraction) && result.fraction >= 0.0 &&
-        result.fraction < (1.0 - 1e-6) && result.rayStart.IsFinite() &&
-        result.rayEnd.IsFinite() && rayLength > 0.0 &&
-        std::isfinite(rayLength)) {
+    if (!std::isfinite(result.fraction) || result.fraction < 0.0 ||
+        result.fraction >= (1.0 - 1e-6))
+      continue;
+
+    const bool rayValid = result.rayStart.IsFinite() && result.rayEnd.IsFinite() &&
+                          rayLength > 0.0 && std::isfinite(rayLength);
+    // RaycastData points and rays are both expressed in the sensor entity
+    // frame. Preserve the backend's hit point when it is valid.
+    gz::math::Vector3d outputPoint = result.point;
+    if (!outputPoint.IsFinite() && rayValid)
+      outputPoint = result.rayStart + ray * result.fraction;
+    if (!outputPoint.IsFinite())
+      continue;
+
+    const double range = rayValid
+                             ? result.rayStart.Length() +
+                                   result.fraction * rayLength
+                             : outputPoint.Length();
+    if (!std::isfinite(range) || range < this->rangeMin_ ||
+        range >= this->rangeMax_)
+      continue;
+
+    if (applyNoise && rayValid) {
       const auto direction = ray / rayLength;
       const double startRange = result.rayStart.Length();
-      const double range = startRange + result.fraction * rayLength;
-      if (!std::isfinite(range) || range < this->rangeMin_ ||
-          range >= this->rangeMax_)
+      const double noise = this->noiseStdDev_ > 0.0
+                               ? noiseDistribution(this->noiseGenerator_)
+                               : this->noiseMean_;
+      const double noisyRange = range + noise;
+      if (!std::isfinite(noisyRange) || noisyRange < this->rangeMin_ ||
+          noisyRange > this->rangeMax_)
         continue;
-      // RaycastData points and rays are both expressed in the sensor entity
-      // frame. Preserve the backend's hit point, which avoids introducing
-      // extra error by reconstructing a long ray from its fraction.
-      gz::math::Vector3d outputPoint = result.point;
-      if (!outputPoint.IsFinite())
-        outputPoint = result.rayStart + ray * result.fraction;
-      if (applyNoise) {
-        const double noise = this->noiseStdDev_ > 0.0
-                                 ? noiseDistribution(this->noiseGenerator_)
-                                 : this->noiseMean_;
-        const double noisyRange = range + noise;
-        if (!std::isfinite(noisyRange) || noisyRange < this->rangeMin_ ||
-            noisyRange > this->rangeMax_)
-          continue;
-        outputPoint = result.rayStart + direction * (noisyRange - startRange);
-      }
-      outputPoints.push_back(outputPoint);
+      outputPoint = result.rayStart + direction * (noisyRange - startRange);
     }
+
+    float reflectivity = 0.0F;
+    if (rayValid && result.normal.IsFinite()) {
+      const double normalLength = result.normal.Length();
+      if (std::isfinite(normalLength) && normalLength > 0.0) {
+        const auto direction = ray / rayLength;
+        const auto surfaceNormal = result.normal / normalLength;
+        const double incidence = std::clamp(
+            std::abs(surfaceNormal.Dot(-direction)), 0.0, 1.0);
+        reflectivity = static_cast<float>(std::round(255.0 * incidence));
+      }
+    }
+    outputPoints.push_back({outputPoint, reflectivity});
   }
   const std::size_t pointCount = outputPoints.size();
 
@@ -243,12 +266,11 @@ bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration& _now) {
     gz::msgs::PointCloudPackedIterator<uint8_t> lineIter(this->pointCloudMsg_,
                                                          "line");
 
-    for (const auto& outputPoint : outputPoints) {
-      *xIter = static_cast<float>(outputPoint.X());
-      *yIter = static_cast<float>(outputPoint.Y());
-      *zIter = static_cast<float>(outputPoint.Z());
-      *intensityIter = 1.0F;
-      // Mid-70's native PointXYZRTL packets use zero for both fields.
+    for (const auto& output : outputPoints) {
+      *xIter = static_cast<float>(output.point.X());
+      *yIter = static_cast<float>(output.point.Y());
+      *zIter = static_cast<float>(output.point.Z());
+      *intensityIter = output.reflectivity;
       *tagIter = 0;
       *lineIter = 0;
       ++xIter;

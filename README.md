@@ -240,6 +240,10 @@ xacro 中的传感器坐标以激光雷达点云坐标系为原点：
 
 RViz 可以只订阅桥接后的 `sensor_msgs/msg/PointCloud2`，不需要 `robot_state_publisher`、RobotModel 或任何雷达 mesh。将 PointCloud2 display 的 topic 设为对应的 `/${link_name}/points`；纯点云检查时可直接把 Fixed Frame 设为 `${link_name}_frame`，需要放到 `world` / `map` 中显示时才配置相应 TF。点云的 `frame_id` 由插件配置为 `${link_name}_frame`。因此，RViz 只显示纯点云即可验证插件输出。
 
+插件发布与真实 Livox `PointXYZRTL` 对齐的 `PointCloudPacked` 字段：`x`、`y`、`z` 为 `float32`，`intensity` 为 `float32`，`tag` 和 `line` 为 `uint8`，`point_step` 为 18 字节。`tag` 与 `line` 当前均为 0，不根据 CSV 点序推断多线号。`intensity` 是由射线方向和命中表面法向量计算的 0 到 255 反射率：`clamp(round(255 * abs(dot(normalize(hit_normal), -normalize(ray_end - ray_start)))), 0, 255)`；射线或法向量无效时为 0，但保留命中点。
+
+检查反射率时，在 RViz 的 PointCloud2 display 中选择对应 topic，将 Fixed Frame 设为 `${link_name}_frame`，Color Transformer 设为 `Intensity`，范围设为 `0` 到 `255` 并启用 Rainbow 着色。不同入射角的命中点应显示不同颜色。
+
 示例提供 `src/livox_lidar_example/urdf/livox_display.urdf.xacro` 和 RobotModel 配置，只是可选的外部辅助显示。它使用 URDF 的 `package://...` mesh URI，由 `robot_state_publisher` 和 RViz 解析；该模型不会改变 Gazebo 中的 link、传感器 pose 或点云坐标。Gazebo mesh 与 RViz mesh 的位置、缩放、坐标原点及同步关系不属于本项目的研究和保证范围，应由使用者在自己的模型中单独校准。
 
 Gazebo 当前示例主要使用 COLLADA `.dae`，RViz 的具体 mesh 格式取决于其渲染器和 URDF 解析链路；mesh 无法显示时分别检查 Gazebo 资源路径或 ROS package share 路径。mesh 显示失败不会影响插件发布点云。
@@ -286,7 +290,7 @@ SDF / xacro
 
 - `gz:type` 使用 `livox_<model>`，System 通过前缀发现，不需要为每个型号新增 System 类；
 - CSV 必须为三列，时间非递减；HAP 的重复时间戳会作为同一时刻的多束射线保留；
-- 当前 `intensity` 固定为 `1.0`，没有材质反射率模型；
+- 所有 `livox_*` 型号共用基于射线入射角的反射率模型；不读取材质颜色或反射系数，也不加入距离衰减和多回波；
 - 多回波、不同扫描模式、IMU、厂商数据包协议、回波强度和其他设备专有功能均未模拟；
 - 当前扫描逻辑使用 CSV 轨迹和周期窗口，不等价于实际设备的全部时序、回波和内部调度；
 - 当前每个 physics step 最多提交一个完整扫描窗口；如果仿真时间一次跨过多个 `update_rate` 周期，积压窗口会在后续 physics step 逐个追赶，可能短时连续发布；应避免仿真步长或暂停恢复跨度大于扫描周期；

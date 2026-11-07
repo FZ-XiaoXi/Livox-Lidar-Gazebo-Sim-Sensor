@@ -227,7 +227,8 @@ void LivoxLidarSystem::PostUpdate(const gz::sim::UpdateInfo& _info,
           point = fractionPoint;
         }
       }
-      sensorResults.push_back({point, ray.start, ray.end, result.fraction});
+      sensorResults.push_back(
+          {point, ray.start, ray.end, result.fraction, result.normal});
     }
     sensor->SetRaycastResults(std::move(sensorResults));
 

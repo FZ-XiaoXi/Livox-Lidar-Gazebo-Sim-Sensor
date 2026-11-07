@@ -57,6 +57,7 @@ class LivoxLidarSensor : public gz::sensors::Sensor {
     gz::math::Vector3d rayStart;
     gz::math::Vector3d rayEnd;
     double fraction{std::numeric_limits<double>::infinity()};
+    gz::math::Vector3d normal;
   };
 
   /// \brief Pass physics results to this sensor before Update().

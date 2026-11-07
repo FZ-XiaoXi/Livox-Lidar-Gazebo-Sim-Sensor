@@ -152,7 +152,9 @@ bool LivoxLidarSensor::Load(const sdf::Sensor& _sdf) {
   gz::msgs::InitPointCloudPacked(
       this->pointCloudMsg_, this->frameId_, false,
       {{"xyz", gz::msgs::PointCloudPacked::Field::FLOAT32},
-       {"intensity", gz::msgs::PointCloudPacked::Field::FLOAT32}});
+       {"intensity", gz::msgs::PointCloudPacked::Field::FLOAT32},
+       {"tag", gz::msgs::PointCloudPacked::Field::UINT8},
+       {"line", gz::msgs::PointCloudPacked::Field::UINT8}});
   this->pointCloudPub_ =
       this->node_.Advertise<gz::msgs::PointCloudPacked>(this->Topic());
   if (!this->pointCloudPub_) {
@@ -236,16 +238,25 @@ bool LivoxLidarSensor::Update(const std::chrono::steady_clock::duration& _now) {
     gz::msgs::PointCloudPackedIterator<float> zIter(this->pointCloudMsg_, "z");
     gz::msgs::PointCloudPackedIterator<float> intensityIter(
         this->pointCloudMsg_, "intensity");
+    gz::msgs::PointCloudPackedIterator<uint8_t> tagIter(this->pointCloudMsg_,
+                                                        "tag");
+    gz::msgs::PointCloudPackedIterator<uint8_t> lineIter(this->pointCloudMsg_,
+                                                         "line");
 
     for (const auto& outputPoint : outputPoints) {
       *xIter = static_cast<float>(outputPoint.X());
       *yIter = static_cast<float>(outputPoint.Y());
       *zIter = static_cast<float>(outputPoint.Z());
       *intensityIter = 1.0F;
+      // Mid-70's native PointXYZRTL packets use zero for both fields.
+      *tagIter = 0;
+      *lineIter = 0;
       ++xIter;
       ++yIter;
       ++zIter;
       ++intensityIter;
+      ++tagIter;
+      ++lineIter;
     }
   }
 
